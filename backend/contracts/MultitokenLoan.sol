@@ -47,6 +47,7 @@ contract MultitokenLoan is Ownable {
         uint256 dueDate;
         bool funded;
         bool repaid;
+        string metadataCID; // ← NEW FIELD
     }
 
     uint256 public loanCounter;
@@ -58,18 +59,19 @@ contract MultitokenLoan is Ownable {
         address token,
         uint256 principal,
         uint256 interest,
-        uint256 dueDate
+        uint256 dueDate,
+        string metadataCID
     );
 
     event LoanFunded(uint256 indexed loanId, address indexed funder);
     event LoanRepaid(uint256 indexed loanId, address indexed borrower);
 
-    // === Loan Request (business only) ===
     function requestLoan(
         address token,
         uint256 principal,
         uint256 interest,
-        uint256 durationInDays
+        uint256 durationInDays,
+        string calldata metadataCID
     ) external onlyBusiness {
         require(principal > 0 && interest > 0, "Invalid terms");
 
@@ -82,14 +84,14 @@ contract MultitokenLoan is Ownable {
             interest: interest,
             dueDate: due,
             funded: false,
-            repaid: false
+            repaid: false,
+            metadataCID: metadataCID
         });
 
-        emit LoanRequested(loanCounter, msg.sender, token, principal, interest, due);
+        emit LoanRequested(loanCounter, msg.sender, token, principal, interest, due, metadataCID);
         loanCounter++;
     }
 
-    // === Loan Funding (investor only) ===
     function fundLoan(uint256 loanId) external onlyInvestor {
         Loan storage loan = loans[loanId];
         require(!loan.funded, "Already funded");
@@ -102,7 +104,6 @@ contract MultitokenLoan is Ownable {
         emit LoanFunded(loanId, msg.sender);
     }
 
-    // === Loan Repayment (borrower only) ===
     function repayLoan(uint256 loanId) external onlyBusiness {
         Loan storage loan = loans[loanId];
         require(msg.sender == loan.borrower, "Not borrower");
@@ -117,12 +118,10 @@ contract MultitokenLoan is Ownable {
         emit LoanRepaid(loanId, msg.sender);
     }
 
-    // === Admin-only token withdrawal ===
     function withdrawToken(address token, address to, uint256 amount) external onlyOwner {
         IERC20(token).transfer(to, amount);
     }
 
-    // === View loan ===
     function getLoan(uint256 loanId) external view returns (Loan memory) {
         return loans[loanId];
     }
