@@ -2,6 +2,7 @@ import os
 import pickle
 import numpy as np
 import pandas as pd
+from typing import Optional, Tuple
 from model.walletEtl import get_wallet_features, format_wallet_data_to_numpy
 
 # === Config ===
@@ -84,7 +85,7 @@ def predict_fico(wallet_address: str, chain: str = "ethereum") -> float:
     normalized_score = np.clip((predicted_fico / 800) * 100, 30, 100)
     return normalized_score
 
-def credit_to_interest_and_loan(fico_score_normalized: float) -> tuple[float | None, float]:
+def credit_to_interest_and_loan(fico_score_normalized: float) -> Tuple[Optional[float], float]:
     """
     Bank-style underwriting:
     Returns (interest rate, max loan amount) for given credit score.
