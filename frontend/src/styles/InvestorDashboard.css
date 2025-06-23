@@ -1,0 +1,19 @@
+.investor-dashboard {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(16,24,32,0.10);
+  padding: 2.5rem 2rem;
+}
+.investor-dashboard h2 {
+  color: #27ae60;
+  margin-bottom: 1.2rem;
+}
+.subtitle {
+  color: #444;
+  margin-bottom: 2rem;
+}
+.loan-market-list {
+  margin: 1.2rem 0 2rem 0;
+}

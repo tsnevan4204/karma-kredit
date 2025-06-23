@@ -1,0 +1,67 @@
+.business-dashboard {
+  max-width: 900px;
+  margin: 2rem auto;
+  background: #fff;
+  border-radius: 14px;
+  box-shadow: 0 2px 16px rgba(16,24,32,0.10);
+  padding: 2.5rem 2rem;
+}
+.business-dashboard h2 {
+  color: #27ae60;
+  margin-bottom: 1.2rem;
+}
+.apply-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 0.7rem 1.8rem;
+  border-radius: 7px;
+  font-weight: 600;
+  margin-bottom: 1.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.apply-btn:hover {
+  background: #219150;
+}
+.loan-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  background: #f8f8f8;
+  padding: 1.5rem;
+  border-radius: 10px;
+}
+.loan-form input[type="number"],
+.loan-form textarea {
+  padding: 0.7rem;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  font-size: 1rem;
+}
+.loan-form textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+.loan-form input[type="file"] {
+  background: #fff;
+  border: none;
+}
+.submit-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.5rem;
+  border-radius: 6px;
+  font-weight: 600;
+  cursor: pointer;
+  align-self: flex-start;
+  transition: background 0.2s;
+}
+.submit-btn:hover {
+  background: #219150;
+}
+.loan-options-list {
+  margin: 1.2rem 0 2rem 0;
+}
