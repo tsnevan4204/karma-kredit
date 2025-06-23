@@ -10,31 +10,68 @@ export const Web3Provider = ({ children }) => {
   const [account, setAccount] = useState(null);
   const [chainId, setChainId] = useState(null);
   const [multitokenLoan, setMultitokenLoan] = useState(null);
+  const [role, setRoleState] = useState(null);
 
   const connectWallet = async () => {
-    if (typeof window.ethereum === "undefined") return;
+    if (typeof window.ethereum === "undefined") {
+      alert("MetaMask not detected");
+      return;
+    }
 
-    const browserProvider = new ethers.BrowserProvider(window.ethereum);
-    const signer = await browserProvider.getSigner();
-    const address = await signer.getAddress();
-    const network = await browserProvider.getNetwork();
+    try {
+      await window.ethereum.request({ method: "eth_requestAccounts" });
 
-    setProvider(browserProvider);
-    setSigner(signer);
-    setAccount(address);
-    setChainId(Number(network.chainId));
+      const browserProvider = new ethers.BrowserProvider(window.ethereum);
+      const signer = await browserProvider.getSigner();
+      const address = await signer.getAddress();
+      const network = await browserProvider.getNetwork();
 
-    const chainName = CHAIN_ID_TO_NAME[Number(network.chainId)];
-    if (!chainName) throw new Error("Unsupported network");
+      setProvider(browserProvider);
+      setSigner(signer);
+      setAccount(address);
+      setChainId(Number(network.chainId));
 
-    const abiModule = await import(`../abis/${chainName}/MultitokenLoan.json`);
-    const contract = new ethers.Contract(
-      abiModule.address,
-      abiModule.abi,
-      signer
-    );
+      const chainName = CHAIN_ID_TO_NAME[Number(network.chainId)];
+      if (!chainName) {
+        alert("Unsupported network");
+        return;
+      }
 
-    setMultitokenLoan(contract);
+      const abiModule = await import(`../abis/${chainName}/MultitokenLoan.json`);
+      const contract = new ethers.Contract(
+        abiModule.address,
+        abiModule.abi,
+        signer
+      );
+
+      setMultitokenLoan(contract);
+
+      // 🔍 Role Detection
+      const role = await contract.getUserRole(address);
+      if (role === "unknown") {
+        const selected = window.prompt("Select role: business or investor")?.toLowerCase();
+
+        if (selected === "business") {
+          const tx = await contract.registerAsBusiness();
+          await tx.wait();
+          setRole("business");
+        } else if (selected === "investor") {
+          const tx = await contract.registerAsInvestor();
+          await tx.wait();
+          setRole("investor");
+        } else {
+          alert("Invalid role selected. Disconnecting...");
+          disconnectWallet();
+          return;
+        }
+      } else {
+        setRole(role);
+      }
+
+    } catch (err) {
+      console.error("Wallet connection error:", err);
+      alert("Failed to connect wallet. Check console for details.");
+    }
   };
 
   const disconnectWallet = () => {
@@ -43,10 +80,37 @@ export const Web3Provider = ({ children }) => {
     setAccount(null);
     setChainId(null);
     setMultitokenLoan(null);
+    setRoleState(null);
+  };
+
+  // Persist role per wallet address
+  useEffect(() => {
+    if (account) {
+      const savedRole = localStorage.getItem(`role_${account}`);
+      if (savedRole) setRoleState(savedRole);
+    }
+  }, [account]);
+
+  const setRole = (newRole) => {
+    setRoleState(newRole);
+    if (account && newRole) {
+      localStorage.setItem(`role_${account}`, newRole);
+    }
   };
 
   useEffect(() => {
-    if (window.ethereum) {
+    const checkIfWalletConnected = async () => {
+      if (typeof window.ethereum !== "undefined") {
+        const accounts = await window.ethereum.request({ method: "eth_accounts" });
+        if (accounts.length > 0) {
+          await connectWallet(); // auto-connect on refresh
+        }
+      }
+    };
+
+    checkIfWalletConnected();
+
+    if (typeof window !== 'undefined' && window.ethereum) {
       window.ethereum.on("chainChanged", () => window.location.reload());
       window.ethereum.on("accountsChanged", () => window.location.reload());
     }
@@ -62,6 +126,8 @@ export const Web3Provider = ({ children }) => {
         multitokenLoan,
         connectWallet,
         disconnectWallet,
+        role,
+        setRole,
       }}
     >
       {children}

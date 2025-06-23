@@ -1,10 +1,17 @@
 .business-dashboard {
-  max-width: 900px;
-  margin: 2rem auto;
+  width: 100vw;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   background: #fff;
-  border-radius: 14px;
-  box-shadow: 0 2px 16px rgba(16,24,32,0.10);
-  padding: 2.5rem 2rem;
+  padding: 2.5rem 0;
+  box-sizing: border-box;
+}
+.business-dashboard > * {
+  max-width: 900px;
+  width: 100%;
 }
 .business-dashboard h2 {
   color: #27ae60;

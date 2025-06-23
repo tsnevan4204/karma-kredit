@@ -4,13 +4,44 @@ pragma solidity ^0.8.24;
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
-contract MultitokenLoan is Ownable {    
-
+contract MultitokenLoan is Ownable {
     constructor() Ownable(msg.sender) {}
 
+    // === Roles ===
+    mapping(address => bool) public isBusiness;
+    mapping(address => bool) public isInvestor;
+
+    modifier onlyBusiness() {
+        require(isBusiness[msg.sender], "Not a registered business");
+        _;
+    }
+
+    modifier onlyInvestor() {
+        require(isInvestor[msg.sender], "Not a registered investor");
+        _;
+    }
+
+    // === Self-Registration ===
+    function registerAsBusiness() external {
+        require(!isBusiness[msg.sender] && !isInvestor[msg.sender], "Already registered");
+        isBusiness[msg.sender] = true;
+    }
+
+    function registerAsInvestor() external {
+        require(!isInvestor[msg.sender] && !isBusiness[msg.sender], "Already registered");
+        isInvestor[msg.sender] = true;
+    }
+
+    function getUserRole(address user) external view returns (string memory) {
+        if (isBusiness[user]) return "business";
+        if (isInvestor[user]) return "investor";
+        return "unknown";
+    }
+
+    // === Loan Data ===
     struct Loan {
         address borrower;
-        address token; // ERC-20 token address
+        address token;
         uint256 principal;
         uint256 interest;
         uint256 dueDate;
@@ -29,19 +60,21 @@ contract MultitokenLoan is Ownable {
         uint256 interest,
         uint256 dueDate
     );
+
     event LoanFunded(uint256 indexed loanId, address indexed funder);
     event LoanRepaid(uint256 indexed loanId, address indexed borrower);
 
-    // == Request a loan ==
+    // === Loan Request (business only) ===
     function requestLoan(
         address token,
         uint256 principal,
         uint256 interest,
         uint256 durationInDays
-    ) external {
+    ) external onlyBusiness {
         require(principal > 0 && interest > 0, "Invalid terms");
 
         uint256 due = block.timestamp + (durationInDays * 1 days);
+
         loans[loanCounter] = Loan({
             borrower: msg.sender,
             token: token,
@@ -56,8 +89,8 @@ contract MultitokenLoan is Ownable {
         loanCounter++;
     }
 
-    // == Fund a loan ==
-    function fundLoan(uint256 loanId) external {
+    // === Loan Funding (investor only) ===
+    function fundLoan(uint256 loanId) external onlyInvestor {
         Loan storage loan = loans[loanId];
         require(!loan.funded, "Already funded");
         require(!loan.repaid, "Already repaid");
@@ -69,8 +102,8 @@ contract MultitokenLoan is Ownable {
         emit LoanFunded(loanId, msg.sender);
     }
 
-    // == Repay a loan ==
-    function repayLoan(uint256 loanId) external {
+    // === Loan Repayment (borrower only) ===
+    function repayLoan(uint256 loanId) external onlyBusiness {
         Loan storage loan = loans[loanId];
         require(msg.sender == loan.borrower, "Not borrower");
         require(loan.funded, "Loan not funded");
@@ -84,12 +117,12 @@ contract MultitokenLoan is Ownable {
         emit LoanRepaid(loanId, msg.sender);
     }
 
-    // == Admin withdraw function ==
+    // === Admin-only token withdrawal ===
     function withdrawToken(address token, address to, uint256 amount) external onlyOwner {
         IERC20(token).transfer(to, amount);
     }
 
-    // == View helper ==
+    // === View loan ===
     function getLoan(uint256 loanId) external view returns (Loan memory) {
         return loans[loanId];
     }

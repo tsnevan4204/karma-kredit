@@ -3,15 +3,15 @@ import LoanCard from '../components/LoanCard';
 import Loader from '../components/Loader';
 import '../styles/InvestorDashboard.css';
 
-const InvestorDashboard = ({ loans, onFund, loading }) => (
+const InvestorDashboard = ({ investments, loading }) => (
   <div className="investor-dashboard">
-    <h2>Investor Dashboard</h2>
-    <p className="subtitle">Browse and fund small business loans.</p>
+    <h2>My Investments</h2>
+    <p className="subtitle">View the loans you have funded and track their progress.</p>
     {loading ? <Loader /> : (
       <div className="loan-market-list">
-        {loans && loans.length ? loans.map(loan => (
-          <LoanCard key={loan.id} loan={loan} onSelect={onFund} />
-        )) : <p>No loans available for funding.</p>}
+        {investments && investments.length ? investments.map(loan => (
+          <LoanCard key={loan.id} loan={loan} />
+        )) : <p>You have not funded any loans yet.</p>}
       </div>
     )}
   </div>

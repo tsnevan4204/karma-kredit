@@ -1,4 +1,4 @@
-.investor-dashboard {
+.directory-page {
   width: 100vw;
   min-height: 80vh;
   display: flex;
@@ -9,11 +9,11 @@
   padding: 2.5rem 0;
   box-sizing: border-box;
 }
-.investor-dashboard > * {
+.directory-page > * {
   max-width: 900px;
   width: 100%;
 }
-.investor-dashboard h2 {
+.directory-page h2 {
   color: #27ae60;
   margin-bottom: 1.2rem;
 }
