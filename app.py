@@ -12,7 +12,7 @@ CORS(app)
 def fico_score():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm-testnet").lower()
+    chain = data.get("chain", "flow-evm").lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400
@@ -35,7 +35,7 @@ def fico_score():
 def wallet_analytics():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm-testnet").lower()
+    chain = data.get("chain", "flow-evm").lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400
@@ -106,7 +106,7 @@ def wallet_analytics():
 def karma_score():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm-testnet").lower()
+    chain = data.get("chain", "flow-evm").lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400
@@ -163,5 +163,11 @@ def karma_score():
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+@app.route("/", methods=["GET"])
+def health_check():
+    return jsonify({"status": "healthy", "message": "OnChain FICO API is running"})
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    import os
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)
