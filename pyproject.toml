@@ -8,6 +8,7 @@ dependencies = [
     "flask>=3.1.1",
     "flask-cors>=6.0.1",
     "ipykernel>=6.29.5",
+    "ngrok>=1.4.0",
     "numpy<2",
     "packaging>=25.0",
     "pandas>=2.3.0",

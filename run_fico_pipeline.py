@@ -23,9 +23,13 @@ def convert_wallet_features_to_eth_units(X_wallet: np.ndarray, chain: str) -> np
     """
     conversion_factors = {
         "ethereum": 1.0,                          # baseline
+        "sepolia": 1.0,                           # Sepolia testnet (ETH)
         "bnb": 614 / 2189.47,                     # 1 BNB in ETH
-        "paypalusd": 1 / 2189.47,                 # 1 USD in ETH
-        "flow": 0.34 / 2189.47                    # 1 FLOW in ETH
+        "bsc-testnet": 614 / 2189.47,             # BSC testnet (BNB)
+        "flow-evm": 0.34 / 2189.47,               # 1 FLOW in ETH
+        "flow-evm-testnet": 0.34 / 2189.47,       # Flow EVM testnet (FLOW)
+        "paypalusd": 1 / 2189.47,                 # 1 USD in ETH (legacy)
+        "flow": 0.34 / 2189.47                    # Legacy alias for flow-evm
     }
     factor = conversion_factors.get(chain.lower(), 1.0)
     X_wallet = X_wallet.copy()
@@ -39,7 +43,11 @@ def convert_tx_features_to_eth_units(tx_matrix: np.ndarray, chain: str) -> np.nd
     """
     conversion_rates = {
         "ethereum": 1.0,
+        "sepolia": 1.0,
         "bnb": 614 / 2189.47,
+        "bsc-testnet": 614 / 2189.47,
+        "flow-evm": 0.34 / 2189.47,
+        "flow-evm-testnet": 0.34 / 2189.47,
         "paypalusd": 1 / 2189.47,
         "flow": 0.34 / 2189.47
     }
