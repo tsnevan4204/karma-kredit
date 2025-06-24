@@ -1,0 +1,41 @@
+.landing-container {
+  min-height: 80vh;
+  width: 100vw;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: #101820;
+  color: #fff;
+  padding: 5rem 2rem 2rem 2rem; /* top padding for navbar */
+  box-sizing: border-box;
+}
+.landing-container > * {
+  max-width: 700px;
+  width: 100%;
+  text-align: center;
+}
+.landing-container h1 {
+  font-size: 2.8rem;
+  color: #27ae60;
+  margin-bottom: 1rem;
+}
+.subtitle {
+  font-size: 1.3rem;
+  color: #fff;
+  margin-bottom: 2.5rem;
+}
+.connect-btn {
+  background: #27ae60;
+  color: #fff;
+  border: none;
+  padding: 0.8rem 2.2rem;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.connect-btn:hover {
+  background: #219150;
+}

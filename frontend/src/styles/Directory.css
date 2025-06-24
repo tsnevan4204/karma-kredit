@@ -1,0 +1,26 @@
+.directory-page {
+  width: 100vw;
+  min-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  background: #fff;
+  padding: 2.5rem 0;
+  box-sizing: border-box;
+}
+.directory-page > * {
+  max-width: 900px;
+  width: 100%;
+}
+.directory-page h2 {
+  color: #27ae60;
+  margin-bottom: 1.2rem;
+}
+.subtitle {
+  color: #444;
+  margin-bottom: 2rem;
+}
+.loan-market-list {
+  margin: 1.2rem 0 2rem 0;
+}
