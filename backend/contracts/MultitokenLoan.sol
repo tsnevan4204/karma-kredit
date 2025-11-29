@@ -5,7 +5,12 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract MultitokenLoan is Ownable {
-    constructor() Ownable(msg.sender) {}
+    constructor(address _usdc) Ownable(msg.sender) {
+        usdc = IERC20(_usdc);
+    }
+
+    // === Stablecoin Used for All Loans ===
+    IERC20 public immutable usdc;
 
     // === Roles ===
     mapping(address => bool) public isBusiness;
@@ -41,8 +46,7 @@ contract MultitokenLoan is Ownable {
     // === Loan Data ===
     struct Loan {
         address borrower;
-        address funder; // Track who funded this loan
-        address token;
+        address funder;
         uint256 principal;
         uint256 interest;
         uint256 dueDate;
@@ -51,17 +55,16 @@ contract MultitokenLoan is Ownable {
         string metadataCID;
         uint256 monthlyPayment;
         uint256 totalPaid;
-        uint256 duration; // in months
+        uint256 duration;
     }
 
     uint256 public loanCounter;
     mapping(uint256 => Loan) public loans;
-    mapping(uint256 => uint256[]) public loanPayments; // Track payment history
+    mapping(uint256 => uint256[]) public loanPayments;
 
     event LoanRequested(
         uint256 indexed loanId,
         address indexed borrower,
-        address token,
         uint256 principal,
         uint256 interest,
         uint256 dueDate,
@@ -74,23 +77,28 @@ contract MultitokenLoan is Ownable {
     event LoanRepaid(uint256 indexed loanId, address indexed borrower);
     event PaymentMade(uint256 indexed loanId, address indexed borrower, uint256 amount, uint256 totalPaid);
 
-    // Calculate monthly payment using simple approximation that's more predictable
-    // For microloans, use simplified calculation: principal/months + average interest
-    function calculateCompoundPayment(uint256 principal, uint256 annualRateBps, uint256 months) internal pure returns (uint256) {
-        // Calculate total interest over the life of the loan (simplified)
-        uint256 totalInterest = (principal * annualRateBps * months) / (10000 * 24); // Reduced by ~half for compound effect
+    // === Simplified Flat Interest Calculation ===
+    function calculateCompoundPayment(uint256 principal, uint256 annualRateBps, uint256 months)
+        internal
+        pure
+        returns (uint256)
+    {
+        uint256 totalInterest = (principal * annualRateBps * months) / (10000 * 24);
         uint256 totalAmount = principal + totalInterest;
         return totalAmount / months;
     }
 
-    // Calculate total amount owed for compound interest loan
-    function calculateTotalOwed(uint256 principal, uint256 annualRateBps, uint256 months) internal pure returns (uint256) {
+    function calculateTotalOwed(uint256 principal, uint256 annualRateBps, uint256 months)
+        internal
+        pure
+        returns (uint256)
+    {
         uint256 monthlyPayment = calculateCompoundPayment(principal, annualRateBps, months);
         return monthlyPayment * months;
     }
 
+    // === Create Loan Request ===
     function requestLoan(
-        address token,
         uint256 principal,
         uint256 interest,
         uint256 durationInMonths,
@@ -99,15 +107,11 @@ contract MultitokenLoan is Ownable {
         require(principal > 0 && interest > 0, "Invalid terms");
         require(durationInMonths > 0 && durationInMonths <= 24, "Duration must be 1-24 months");
 
-        // Calculate monthly payment using compound interest formula
-        // M = P * [r(1+r)^n] / [(1+r)^n - 1] where r = monthly rate, n = months
-        // Interest is in basis points (e.g., 1000 = 10% annual)
         uint256 monthlyPayment = calculateCompoundPayment(principal, interest, durationInMonths);
 
         loans[loanCounter] = Loan({
             borrower: msg.sender,
-            funder: address(0), // Will be set when loan is funded
-            token: token,
+            funder: address(0),
             principal: principal,
             interest: interest,
             dueDate: block.timestamp + (durationInMonths * 30 days),
@@ -119,131 +123,79 @@ contract MultitokenLoan is Ownable {
             duration: durationInMonths
         });
 
-        emit LoanRequested(loanCounter, msg.sender, token, principal, interest, loans[loanCounter].dueDate, metadataCID, monthlyPayment, durationInMonths);
+        emit LoanRequested(
+            loanCounter,
+            msg.sender,
+            principal,
+            interest,
+            loans[loanCounter].dueDate,
+            metadataCID,
+            monthlyPayment,
+            durationInMonths
+        );
+
         loanCounter++;
     }
 
-    function fundLoan(uint256 loanId) external payable onlyInvestor {
+    // === Investor Funds Loan ===
+    function fundLoan(uint256 loanId) external onlyInvestor {
         Loan storage loan = loans[loanId];
         require(!loan.funded, "Already funded");
         require(!loan.repaid, "Already repaid");
 
-        if (loan.token == address(0)) {
-            // Native token (ETH/FLOW) transfer
-            require(msg.value == loan.principal, "Incorrect ETH amount");
-            payable(loan.borrower).transfer(loan.principal);
-        } else {
-            // ERC20 token transfer
-            require(msg.value == 0, "No ETH needed for ERC20 transfer");
-            IERC20 token = IERC20(loan.token);
-            require(token.transferFrom(msg.sender, loan.borrower, loan.principal), "Transfer failed");
-        }
+        require(
+            usdc.transferFrom(msg.sender, loan.borrower, loan.principal),
+            "USDC transfer failed"
+        );
 
         loan.funded = true;
-        loan.funder = msg.sender; // Track who funded this loan
+        loan.funder = msg.sender;
+
         emit LoanFunded(loanId, msg.sender);
     }
 
-    function makePayment(uint256 loanId) external payable onlyBusiness {
+    // === Flexible Repayment: Borrower Chooses Payment Amount ===
+    function makePayment(uint256 loanId, uint256 amount) public onlyBusiness {
         Loan storage loan = loans[loanId];
         require(msg.sender == loan.borrower, "Not borrower");
         require(loan.funded, "Loan not funded");
-        require(!loan.repaid, "Already fully repaid");
-        require(loan.funder != address(0), "No funder recorded");
+        require(!loan.repaid, "Already repaid");
+        require(amount > 0, "Amount must be > 0");
 
         uint256 totalOwed = calculateTotalOwed(loan.principal, loan.interest, loan.duration);
         uint256 remainingBalance = totalOwed - loan.totalPaid;
-        require(remainingBalance > 0, "Loan already fully paid");
+        require(remainingBalance > 0, "Loan fully paid");
 
-        uint256 paymentAmount;
-        
-        if (loan.token == address(0)) {
-            // Native token (ETH/FLOW) payment
-            paymentAmount = msg.value;
-            require(paymentAmount > 0, "Payment amount must be greater than 0");
-            require(paymentAmount <= remainingBalance, "Payment exceeds remaining balance");
-            // Send payment directly to the investor who funded the loan
-            payable(loan.funder).transfer(paymentAmount);
-        } else {
-            // ERC20 token payment
-            require(msg.value == 0, "No ETH needed for ERC20 payment");
-            // For ERC20, we'll expect the monthly payment amount for simplicity
-            paymentAmount = loan.monthlyPayment;
-            if (paymentAmount > remainingBalance) {
-                paymentAmount = remainingBalance;
-            }
-            IERC20 token = IERC20(loan.token);
-            require(token.transferFrom(msg.sender, loan.funder, paymentAmount), "Payment failed");
-        }
+        // Cap overpayment automatically
+        uint256 payment = amount > remainingBalance ? remainingBalance : amount;
 
-        // Update loan state
-        loan.totalPaid += paymentAmount;
-        loanPayments[loanId].push(paymentAmount);
+        require(
+            usdc.transferFrom(msg.sender, loan.funder, payment),
+            "USDC payment failed"
+        );
 
-        // Check if loan is fully repaid
+        loan.totalPaid += payment;
+        loanPayments[loanId].push(payment);
+
         if (loan.totalPaid >= totalOwed) {
             loan.repaid = true;
             emit LoanRepaid(loanId, msg.sender);
         }
 
-        emit PaymentMade(loanId, msg.sender, paymentAmount, loan.totalPaid);
+        emit PaymentMade(loanId, msg.sender, payment, loan.totalPaid);
     }
 
-    // Alias for makePayment to maintain backward compatibility
-    function repayLoan(uint256 loanId) external payable onlyBusiness {
-        // Call the internal payment logic directly
-        Loan storage loan = loans[loanId];
-        require(msg.sender == loan.borrower, "Not borrower");
-        require(loan.funded, "Loan not funded");
-        require(!loan.repaid, "Already fully repaid");
-        require(loan.funder != address(0), "No funder recorded");
-
-        uint256 totalOwed = calculateTotalOwed(loan.principal, loan.interest, loan.duration);
-        uint256 remainingBalance = totalOwed - loan.totalPaid;
-        require(remainingBalance > 0, "Loan already fully paid");
-
-        uint256 paymentAmount;
-        
-        if (loan.token == address(0)) {
-            // Native token (ETH/FLOW) payment
-            paymentAmount = msg.value;
-            require(paymentAmount > 0, "Payment amount must be greater than 0");
-            require(paymentAmount <= remainingBalance, "Payment exceeds remaining balance");
-            // Send payment directly to the investor who funded the loan
-            payable(loan.funder).transfer(paymentAmount);
-        } else {
-            // ERC20 token payment
-            require(msg.value == 0, "No ETH needed for ERC20 payment");
-            paymentAmount = loan.monthlyPayment;
-            if (paymentAmount > remainingBalance) {
-                paymentAmount = remainingBalance;
-            }
-            IERC20 token = IERC20(loan.token);
-            require(token.transferFrom(msg.sender, loan.funder, paymentAmount), "Payment failed");
-        }
-
-        // Update loan state
-        loan.totalPaid += paymentAmount;
-        loanPayments[loanId].push(paymentAmount);
-
-        // Check if loan is fully repaid
-        if (loan.totalPaid >= totalOwed) {
-            loan.repaid = true;
-            emit LoanRepaid(loanId, msg.sender);
-        }
-
-        emit PaymentMade(loanId, msg.sender, paymentAmount, loan.totalPaid);
+    // Backwards-compatible alias
+    function repayLoan(uint256 loanId, uint256 amount) external {
+        makePayment(loanId, amount);
     }
 
-    function withdrawToken(address token, address to, uint256 amount) external onlyOwner {
-        IERC20(token).transfer(to, amount);
+    // === Owner Withdrawal (for accidental token stuck) ===
+    function withdrawUSDC(address to, uint256 amount) external onlyOwner {
+        require(usdc.transfer(to, amount), "Withdrawal failed");
     }
 
-    function withdrawNative(address payable to, uint256 amount) external onlyOwner {
-        require(address(this).balance >= amount, "Insufficient balance");
-        to.transfer(amount);
-    }
-
+    // === Helpers ===
     function getLoan(uint256 loanId) external view returns (Loan memory) {
         return loans[loanId];
     }
