@@ -1,125 +1,135 @@
-# 🌱 YieldKarma
+# 🌱 YieldKarma  
 ### *Do good. Earn yield. Stack Karma.*
 
 YieldKarma is a DeFi lending platform that lets users **passively invest in real-world small businesses** in emerging markets, while earning yield and building on-chain impact.
 
-By combining crypto-native **Karma**, KYC, and ETF-style staking, YieldKarma brings **DeFi to the people who need it most**—and rewards those who fund them.
+By combining **Karma reputation**, **Worldcoin Proof of Personhood**, **ML-driven wallet security**, and **USDC lending rails**, YieldKarma brings **crypto to the people who need it most**—and rewards those who fund them.
 
 ---
 
-## ✨ One-Liner
-**YieldKarma is a DeFi platform where investors earn passive crypto yield while helping small businesses grow — powered by on-chain Karma and real-world lending pools.**
+## ✨ One-Liner  
+**YieldKarma is a DeFi platform where investors earn passive yield while helping small businesses grow — powered by on-chain Karma, Worldcoin identity, ML-based wallet security, and USDC lending pools.**
 
 ---
 
-## 🧠 Why It Matters
-Billions of people worldwide lack access to fair credit, while crypto investors struggle to find DeFi use cases with real-world impact.
+## 🧠 Why It Matters  
+Billions lack fair access to credit, and crypto’s capital is underutilized and disconnected from real people.
 
-YieldKarma solves both problems by:
-- Giving small business owners access to crypto-backed loans based on wallet credibility
-- Letting investors “Yield Karm” by staking into curated pools that support high-Karma borrowers
-
----
-
-## 🛠 How It Works
-
-### 🔮 Karma (Crypto-native Trust Signal)
-Each borrower builds **Karma**—a credibility signal based on:
-- Wallet age and transaction history
-- On-chain reputation (protocol usage, counterparties)
-- Repayment behavior
-- KYC verification
-- Network-level heuristics to prevent sybil activity
-
-Borrowers with low Karma are denied. Higher Karma unlocks better terms and more capital.
-
-### 🔐 KYC & Identity Verification
-To avoid fake wallets gaming the system, we integrate KYC tools like:
-- **Worldcoin**, **Fractal**, or **Civic Pass** (lightweight, global-ready)
-- Mobile-native onboarding using **biometric or government ID**, especially in rural regions
-
-This ensures:
-- One human = one wallet
-- Repeatable trust
-- Scaled protection against fraud and carpet farmers
-
-### 🧺 Loan Marketplace
-
-#### For Borrowers
-> “I’m a farmer in Colombia and need $1,000 to buy cattle feed.”
-
-- Upload need, bio, images (like Kiva)
-- Undergo KYC + build Karma
-- Platform suggests terms based on Karma
-- Request posted to marketplace
-
-#### For Investors
-> “I want to earn passive income and support real people.”
-
-Two options:
-- **Direct Lending** (aka Manual Yield Karming): browse the loan gallery, review borrower details, and fund specific requests.
-- **ETF-style Pools** (aka Passive Yield Karming): stake crypto into diversified, auto-managed pools based on borrower Karma, repayment history, and loan category.
-
-Investor tools include:
-- Loan detail cards
-- Karma gauge (trust indicator)
-- Yield projection
-- Impact footprint
-
-### 📊 YieldKarma ETF Logic
-For passive investors:
-- Stake funds into pools like **AgriPool**, **WomenFoundersPool**, or **KarmaMax**
-- Capital is automatically deployed to top-performing loans
-- Algorithms prioritize **strong Karma**, **past repayments**, and **risk diversity**
-- Pools are rebalanced as repayments occur and Karma evolves
+YieldKarma fixes both by:  
+- Giving small business owners **verified, reputation-based access** to loans  
+- Letting investors deploy into **high-Karma, ML-screened, Worldcoin-verified borrowers**  
+- Creating yield with real impact
 
 ---
 
-## 🌊 Why Flow?
+## 🛠 How It Works  
 
-We chose **Flow** because it’s built for consumer crypto:
+### 🔮 Karma (Crypto-native Trust Signal)  
+Karma is a composite score combining:  
+- Wallet age and transaction graph  
+- Protocol usage and counterparties  
+- Repayment behavior  
+- Human verification (Worldcoin)  
+- Machine-learning fraud detection  
+- Network heuristics and sybil checks  
 
-- Low fees, fast txns
-- UX-enhanced features (walletless onboarding, batched transactions)
-- Agent support for auto repayments
-- Account linking for fund recovery
-- Randomness for portfolio sampling
-
----
-
-## 📈 Potential for Mass Adoption
-
-YieldKarma is everything a killer app should be:
-- **Real problem, real people:** Brings DeFi to actual small businesses in need
-- **Crypto made human:** Lending is no longer abstract—it’s personal
-- **Frictionless and sticky:** Easy onboarding, repeatable behavior, and social reward loop
-- **Win-win:** Investors earn yield, borrowers grow their livelihoods
+High Karma → better terms. Low Karma → rejection or probation.
 
 ---
 
-## ✅ Hackathon Deliverables
+## 🪪 Identity & Sybil Resistance via Worldcoin  
+YieldKarma integrates **Worldcoin Proof of Personhood** as the core identity layer.
 
-- [x] Flow integration with Karma + loan logic
-- [x] Deployed demo with borrower showcase + staking dashboard
-- [x] Public repo with README
-- [x] Live reputation model (stub or working prototype)
-- [x] Passive staking pool with top-off strategy
+Worldcoin provides:  
+- One-human–one-identity enforcement  
+- Global access, including rural and low-resource regions  
+- Instant, low-friction verification  
+- Strong sybil resistance for fair lending  
+
+This ensures that every borrower is a unique human and prevents loan farming or multi-wallet abuse.
 
 ---
 
-## 📋 README Checklist
+## 🧬 Machine Learning Wallet Security  
+Beyond identity, YieldKarma uses an ML system to assess wallet trustworthiness and detect malicious patterns.
 
-**Title**: YieldKarma  
-**Tagline**: *Do good. Earn yield. Stack Karma.*  
+### How it works  
+1. **Wallet Vectorization**  
+   - Transaction frequency  
+   - Counterparty diversity  
+   - Token flow consistency  
+   - Time-series behavior  
+   - Historical protocol interactions  
 
-- **One-sentence summary**  
-> A DeFi platform where investors earn passive crypto yield while helping small businesses grow — powered by on-chain Karma and real-world lending pools.
+2. **Random Forest Classification**  
+   The vectorized wallet becomes the input to a **random forest model** trained to classify:  
+   - High-trust borrowers  
+   - Risky / anomalous wallets  
+   - Sybil-like activity  
+   - Potential laundering paths  
 
-- **Flow Integration**  
-> - Used Cadence to build loan contract logic  
-> - Leveraged Flow’s randomness for pool sampling  
-> - Utilized account linking for secure wallet recovery  
-> - Optimized for UX with Flow’s EVM++ features
+3. **Integrated into Karma**  
+   The ML output directly influences Karma and loan eligibility.
 
-- **Team & Handles**  
-> [List of team members with roles + Twitter/GitHub]
+This creates a **dual-defense system**:  
+Worldcoin ensures the borrower is human; ML ensures the wallet is trustworthy.
+
+---
+
+## 💵 Currency & Settlement via Circle USDC  
+YieldKarma uses **Circle USDC** as its lending currency.
+
+USDC enables:  
+- Stable, transparent dollar-backed rails  
+- Low-cost cross-border flow  
+- Easy investor on/off ramps  
+- Strong liquidity and exchange access  
+
+Borrowers receive predictable, stable-value capital; investors earn stablecoin-denominated yield.
+
+---
+
+## 🧺 Loan Marketplace  
+
+### For Borrowers  
+- Submit loan need, story, and media  
+- Verify identity with Worldcoin  
+- Wallet undergoes ML security scoring  
+- Karma generated from identity, history, and ML signals  
+- Listing goes live with auto-suggested loan terms  
+
+### For Investors  
+Two modes:  
+1. **Direct Lending** — manually choose borrowers  
+2. **ETF-style Pools** — stake USDC into algorithmically diversified pools  
+
+Every loan shows:  
+- Karma score  
+- ML security grade  
+- Yield projection  
+- Repayment history  
+- Impact profile  
+
+---
+
+## 📊 YieldKarma ETF Logic  
+Pools like **AgriPool**, **WomenFoundersPool**, or **KarmaMax** optimize for:  
+- High Karma  
+- Strong ML trust scores  
+- Verified Worldcoin identity  
+- Diversified loan categories  
+- Historical repayment data  
+
+Capital is auto-deployed and rebalanced as loans evolve.
+
+---
+
+## 📈 Potential for Mass Adoption  
+YieldKarma is built for global scale and real-world utility:  
+- **Real borrowers** accessing fair credit  
+- **ML-verified and Worldcoin-verified identities** ensuring trust  
+- **Stable USDC rails** enabling smooth cross-border lending  
+- **Frictionless UX** for both investors and borrowers  
+- **Compounding social impact** with compounding yield  
+
+YieldKarma turns crypto into a human financial network—secure, global, and meaningful.
