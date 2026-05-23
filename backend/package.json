@@ -4,7 +4,12 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "compile": "hardhat compile",
+    "test": "hardhat test",
+    "deploy:local": "hardhat run scripts/deploy-local.js --network hardhat",
+    "deploy:arc": "hardhat run scripts/deploy.js --network arcTestnet",
+    "seed:local": "hardhat run scripts/seed-loans.js --network hardhat",
+    "seed:arc": "hardhat run scripts/seed-loans.js --network arcTestnet"
   },
   "keywords": [],
   "author": "",

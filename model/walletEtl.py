@@ -87,7 +87,7 @@ def get_wallet_features(wallet: str, chain: str = "ethereum"):
     wallet = wallet.lower()
     
     # Handle Flow EVM testnet and other unsupported chains with mock data
-    if chain in ["flow-evm-testnet", "flow", "flow-evm"]:
+    if chain in ["flow-evm-testnet", "flow", "flow-evm", "arc-testnet", "arctestnet", "arc"]:
         print(f"⚠️  Chain {chain} not supported by API, using mock data")
         # Return mock data for Flow EVM testnet
         feature_vector = {

@@ -3,7 +3,25 @@
 
 YieldKarma is a DeFi lending platform that lets users **passively invest in real-world small businesses** in emerging markets, while earning yield and building on-chain impact.
 
-By combining **Karma reputation**, **Worldcoin Proof of Personhood**, **ML-driven wallet security**, and **USDC lending rails**, YieldKarma brings **crypto to the people who need it most**—and rewards those who fund them.
+By combining **Karma reputation**, **ML-driven credit scoring**, and **USDC on Arc** (Circle), YieldKarma brings **stablecoin credit to small businesses**—and rewards investors who fund them.
+
+**Roadmap:** See [docs/CIRCLE_GRANT_PLAN.md](docs/CIRCLE_GRANT_PLAN.md) for fixes, Circle integrations, and feature backlog. **Architecture:** [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+
+### Local dev (Sprint 1)
+
+```bash
+# Contracts
+cd backend && npm install && npm run compile && npm test
+npm run deploy:local && npm run seed:local
+
+# Frontend (uses VITE_NETWORK=hardhat from frontend/.env)
+cd frontend && npm install && npm run dev
+
+# API
+uv run python app.py
+```
+
+For **Arc testnet**: set `PRIVATE_KEY` in `backend/.env`, run `npm run deploy:arc`, set `frontend/.env` to `VITE_NETWORK=arcTestnet`, add Arc network in MetaMask (see plan doc §15).
 
 ---
 

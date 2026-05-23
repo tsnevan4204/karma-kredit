@@ -29,7 +29,9 @@ def convert_wallet_features_to_eth_units(X_wallet: np.ndarray, chain: str) -> np
         "flow-evm": 0.34 / 2189.47,               # 1 FLOW in ETH
         "flow-evm-testnet": 0.34 / 2189.47,       # Flow EVM testnet (FLOW)
         "paypalusd": 1 / 2189.47,                 # 1 USD in ETH (legacy)
-        "flow": 0.34 / 2189.47                    # Legacy alias for flow-evm
+        "flow": 0.34 / 2189.47,                   # Legacy alias for flow-evm
+        "arc-testnet": 1 / 2189.47,               # USDC-denominated chain
+        "arc": 1 / 2189.47,
     }
     factor = conversion_factors.get(chain.lower(), 1.0)
     X_wallet = X_wallet.copy()
@@ -49,7 +51,9 @@ def convert_tx_features_to_eth_units(tx_matrix: np.ndarray, chain: str) -> np.nd
         "flow-evm": 0.34 / 2189.47,
         "flow-evm-testnet": 0.34 / 2189.47,
         "paypalusd": 1 / 2189.47,
-        "flow": 0.34 / 2189.47
+        "flow": 0.34 / 2189.47,
+        "arc-testnet": 1 / 2189.47,
+        "arc": 1 / 2189.47,
     }
 
     if chain.lower() not in conversion_rates:

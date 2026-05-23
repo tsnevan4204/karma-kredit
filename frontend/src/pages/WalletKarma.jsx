@@ -61,9 +61,9 @@ const WalletKarma = () => {
   };
 
     const formatFlowValue = (value) => {
-    if (value === 0) return '0 PyUSD';
-    if (value < 0.01) return '< 0.01 PyUSD';
-    return `${value.toFixed(2)} PyUSD`;
+    if (value === 0) return '0 USDC';
+    if (value < 0.01) return '< 0.01 USDC';
+    return `${value.toFixed(2)} USDC`;
   };
 
   if (!account) {
@@ -155,7 +155,7 @@ const WalletKarma = () => {
                     </h3>
                     <p className="text-neutral-600">
                       {walletAnalytics.interest_rate ? 
-                        `You qualify for ${walletAnalytics.interest_rate}% interest rate loans up to ${walletAnalytics.max_loan_amount.toLocaleString()} PyUSD` :
+                        `You qualify for ${walletAnalytics.interest_rate}% interest rate loans up to ${walletAnalytics.max_loan_amount.toLocaleString()} USDC` :
                         'Continue building your transaction history to improve your score.'
                       }
                     </p>

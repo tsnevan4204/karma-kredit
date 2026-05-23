@@ -86,12 +86,12 @@ const StakePool = () => {
       return;
     }
     if (!stakeAmount || stakeAmount < selectedPool.minStake || stakeAmount > selectedPool.maxStake) {
-      alert(`Please enter a valid amount between ${selectedPool.minStake} and ${selectedPool.maxStake} PyUSD`);
+      alert(`Please enter a valid amount between ${selectedPool.minStake} and ${selectedPool.maxStake} USDC`);
       return;
     }
     // Here you would integrate with the smart contract
     console.log('Staking:', stakeAmount, 'in', selectedPool.name);
-          alert(`Successfully staked ${stakeAmount} PyUSD in ${selectedPool.name}!`);
+          alert(`Successfully staked ${stakeAmount} USDC in ${selectedPool.name}!`);
     setStakeAmount('');
     setSelectedPool(null);
   };
@@ -159,7 +159,7 @@ const StakePool = () => {
                     <span className="text-sm text-neutral-600">Total Staked</span>
                   </div>
                   <span className="text-sm font-medium text-neutral-900">
-                    {(pool.totalStaked / 1000).toFixed(0)}K PyUSD
+                    {(pool.totalStaked / 1000).toFixed(0)}K USDC
                   </span>
                 </div>
 
@@ -191,8 +191,8 @@ const StakePool = () => {
                   <span className="text-neutral-600">Max Stake</span>
                 </div>
                 <div className="flex justify-between text-sm font-medium">
-                                  <span className="text-neutral-900">{pool.minStake.toLocaleString()} PyUSD</span>
-                <span className="text-neutral-900">{pool.maxStake.toLocaleString()} PyUSD</span>
+                                  <span className="text-neutral-900">{pool.minStake.toLocaleString()} USDC</span>
+                <span className="text-neutral-900">{pool.maxStake.toLocaleString()} USDC</span>
                 </div>
               </div>
 
@@ -217,12 +217,12 @@ const StakePool = () => {
             <div className="text-center p-4 bg-neutral-50 rounded-xl">
               <PieChart className="w-8 h-8 text-primary-600 mx-auto mb-2" />
               <p className="text-sm text-neutral-600">Total Staked</p>
-              <p className="text-xl font-bold text-neutral-900">3,500 PyUSD</p>
+              <p className="text-xl font-bold text-neutral-900">3,500 USDC</p>
             </div>
             <div className="text-center p-4 bg-neutral-50 rounded-xl">
               <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
               <p className="text-sm text-neutral-600">Total Earned</p>
-              <p className="text-xl font-bold text-green-600">420 PyUSD</p>
+              <p className="text-xl font-bold text-green-600">420 USDC</p>
             </div>
             <div className="text-center p-4 bg-neutral-50 rounded-xl">
               <Target className="w-8 h-8 text-karma-600 mx-auto mb-2" />
@@ -256,7 +256,7 @@ const StakePool = () => {
               <form onSubmit={handleStake} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Amount to Stake (PyUSD)
+                    Amount to Stake (USDC)
                   </label>
                   <input
                     type="number"
@@ -269,7 +269,7 @@ const StakePool = () => {
                     required
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    Min: {selectedPool.minStake.toLocaleString()} PyUSD | Max: {selectedPool.maxStake.toLocaleString()} PyUSD
+                    Min: {selectedPool.minStake.toLocaleString()} USDC | Max: {selectedPool.maxStake.toLocaleString()} USDC
                   </p>
                 </div>
 

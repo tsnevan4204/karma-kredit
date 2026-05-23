@@ -194,7 +194,7 @@ const BorrowerDashboard = () => {
       if (error.message.includes('user rejected')) {
         alert('Transaction was cancelled.');
       } else if (error.message.includes('insufficient funds')) {
-        alert('Insufficient funds for gas fees. Please add some PyUSD to your wallet.');
+        alert('Insufficient funds for gas fees. Please add some USDC to your wallet.');
       } else {
         alert(`Failed to submit loan request: ${error.message}`);
       }
@@ -227,7 +227,7 @@ const BorrowerDashboard = () => {
     setIsProcessingPayment(prev => ({ ...prev, [loanId]: true }));
     
     try {
-      console.log(`💰 Making payment of ${paymentAmount} PyUSD for loan ${loanId}`);
+      console.log(`💰 Making payment of ${paymentAmount} USDC for loan ${loanId}`);
       
       await repayLoan(loanId, paymentAmount);
       
@@ -242,7 +242,7 @@ const BorrowerDashboard = () => {
       if (error.message.includes('user rejected')) {
         alert('Payment was cancelled.');
       } else if (error.message.includes('insufficient funds')) {
-        alert('Insufficient PyUSD balance for this payment.');
+        alert('Insufficient USDC balance for this payment.');
       } else if (error.message.includes('exceeds loan amount')) {
         alert('Payment amount exceeds remaining loan balance.');
       } else {
@@ -515,7 +515,7 @@ const BorrowerDashboard = () => {
                   <div className="flex items-center space-x-2">
                     <Target className="w-4 h-4 text-karma-500" />
                     <span className="text-sm font-medium text-neutral-700">
-                      Max Loan: {ficoData?.max_loan_amount ? `${ficoData.max_loan_amount.toLocaleString()} PyUSD` : 'N/A'}
+                      Max Loan: {ficoData?.max_loan_amount ? `${ficoData.max_loan_amount.toLocaleString()} USDC` : 'N/A'}
                     </span>
                   </div>
                 </div>
@@ -548,7 +548,7 @@ const BorrowerDashboard = () => {
                         <div>
                           <div className="flex items-center space-x-3 mb-2">
                             <h3 className="text-xl font-bold text-neutral-900">
-                              {parseFloat(loan.amount).toLocaleString()} PyUSD
+                              {parseFloat(loan.amount).toLocaleString()} USDC
                             </h3>
                             <div className={`w-3 h-3 rounded-full ${getStatusColor(loan.status)}`}></div>
                             <span className="text-sm font-medium text-neutral-600 capitalize">
@@ -590,13 +590,13 @@ const BorrowerDashboard = () => {
                         <div className="grid md:grid-cols-3 gap-6 mb-6">
                           <div className="text-center">
                             <div className="text-2xl font-bold text-neutral-900 mb-1">
-                              {loanMetrics.monthlyPayment.toFixed(2)} PyUSD
+                              {loanMetrics.monthlyPayment.toFixed(2)} USDC
                             </div>
                             <div className="text-sm text-neutral-600">Monthly Payment</div>
                           </div>
                           <div className="text-center">
                             <div className="text-2xl font-bold text-karma-600 mb-1">
-                              {loanMetrics.remainingBalance.toFixed(2)} PyUSD
+                              {loanMetrics.remainingBalance.toFixed(2)} USDC
                             </div>
                             <div className="text-sm text-neutral-600">Remaining Balance</div>
                           </div>
@@ -623,7 +623,7 @@ const BorrowerDashboard = () => {
                             ) : (
                               <>
                                 <CreditCard className="w-5 h-5" />
-                                <span>Pay Monthly ({loanMetrics.monthlyPayment.toFixed(2)} PyUSD)</span>
+                                <span>Pay Monthly ({loanMetrics.monthlyPayment.toFixed(2)} USDC)</span>
                               </>
                             )}
                           </button>
@@ -634,7 +634,7 @@ const BorrowerDashboard = () => {
                             className="flex-1 bg-white border-2 border-neutral-300 text-neutral-700 py-4 px-6 rounded-xl font-semibold text-lg hover:bg-neutral-50 hover:border-neutral-400 transition-all duration-200 flex items-center justify-center space-x-3 disabled:opacity-50"
                           >
                             <Zap className="w-5 h-5" />
-                            <span>Pay Full ({loanMetrics.remainingBalance.toFixed(2)} PyUSD)</span>
+                            <span>Pay Full ({loanMetrics.remainingBalance.toFixed(2)} USDC)</span>
                           </button>
                         </div>
                       </div>
@@ -702,7 +702,7 @@ const BorrowerDashboard = () => {
               <div className="grid md:grid-cols-2 gap-6">
                 <div>
                   <label className="block text-sm font-semibold text-neutral-700 mb-3">
-                    Loan Amount (PyUSD)
+                    Loan Amount (USDC)
                   </label>
                   <input
                     type="number"

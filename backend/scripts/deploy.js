@@ -13,8 +13,9 @@ async function main() {
 
   // === USDC Address Table ===
   const USDC_ADDRESSES = {
-    mainnet: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48", // USDC mainnet
-    sepolia: "0x1c7D4B196Cb0C7BFDd1B2A0b79c3F46c5D8fF1B3", // Circle USDC testnet
+    mainnet: "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+    sepolia: "0x1c7D4B196Cb0C7BFDd1B2A0b79c3F46c5D8fF1B3",
+    arcTestnet: "0x3600000000000000000000000000000000000000",
     hardhat:
       process.env.LOCAL_USDC || "0x0000000000000000000000000000000000000001",
     localhost:

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '../contexts/WalletContext';
+import { USE_DEMO_LOANS } from '../config/contracts';
 import { Search, Filter, TrendingUp, Clock, DollarSign, RefreshCw, X, Plus } from 'lucide-react';
 
 const LoanMarketplace = () => {
@@ -26,8 +27,7 @@ const LoanMarketplace = () => {
     try {
       console.log('📊 Loading all loans from marketplace...');
       
-      // TEMPORARY: Hardcoded loans matching the uploaded images
-      const hardcodedLoans = [
+      const hardcodedLoans = USE_DEMO_LOANS ? [
                           {
            id: '1',
            borrower: {
@@ -130,9 +130,9 @@ const LoanMarketplace = () => {
            status: 'active',
            dueDate: null
          }
-      ];
+      ] : [];
       
-      // Try to load actual contract loans first, then fallback to hardcoded
+      // Load on-chain loans; merge demo list only when VITE_USE_DEMO_LOANS=true
       let contractLoans = [];
       try {
         contractLoans = await getAllLoans();
@@ -146,12 +146,13 @@ const LoanMarketplace = () => {
         let ficoScore = 650; // Default
         try {
           console.log(`🔍 Fetching FICO score for borrower: ${loan.borrower}`);
-          const response = await fetch('http://localhost:5000/api/fico-score', {
+          const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+          const response = await fetch(`${apiBase}/api/fico-score`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ 
               wallet_address: loan.borrower,
-              chain: 'sepolia'
+              chain: import.meta.env.VITE_NETWORK === 'arcTestnet' ? 'arc-testnet' : 'sepolia'
             })
           });
           
@@ -237,7 +238,7 @@ const LoanMarketplace = () => {
     const remainingAmount = selectedLoan.amount - (selectedLoan.amount * selectedLoan.funded / 100);
     
     if (amount > remainingAmount) {
-      alert(`Investment amount cannot exceed the remaining loan amount of ${remainingAmount.toFixed(2)} PyUSD`);
+      alert(`Investment amount cannot exceed the remaining loan amount of ${remainingAmount.toFixed(2)} USDC`);
       return;
     }
 
@@ -443,7 +444,7 @@ const LoanMarketplace = () => {
                   <div className="flex items-center space-x-1">
                     <DollarSign className="w-4 h-4 text-neutral-400" />
                     <span className="text-sm text-neutral-600">
-                      {loan.amount.toLocaleString()} PyUSD
+                      {loan.amount.toLocaleString()} USDC
                     </span>
                   </div>
                   <div className="flex items-center space-x-1">
@@ -549,7 +550,7 @@ const LoanMarketplace = () => {
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div>
                       <span className="text-neutral-600">Loan Amount:</span>
-                      <p className="font-medium">{selectedLoan.amount.toLocaleString()} PyUSD</p>
+                      <p className="font-medium">{selectedLoan.amount.toLocaleString()} USDC</p>
                     </div>
                     <div>
                       <span className="text-neutral-600">Interest Rate:</span>
@@ -559,7 +560,7 @@ const LoanMarketplace = () => {
                   <div className="mt-2">
                     <span className="text-neutral-600 text-sm">Remaining to fund:</span>
                     <p className="font-medium">
-                      {(selectedLoan.amount - (selectedLoan.amount * selectedLoan.funded / 100)).toFixed(2)} PyUSD
+                      {(selectedLoan.amount - (selectedLoan.amount * selectedLoan.funded / 100)).toFixed(2)} USDC
                     </p>
                   </div>
                 </div>
@@ -568,7 +569,7 @@ const LoanMarketplace = () => {
               <form onSubmit={handleInvestSubmit}>
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Investment Amount (PyUSD)
+                    Investment Amount (USDC)
                   </label>
                   <input
                     type="number"
@@ -583,7 +584,7 @@ const LoanMarketplace = () => {
                     disabled={isInvesting}
                   />
                   <p className="text-xs text-neutral-500 mt-1">
-                    Minimum: 0.01 PyUSD • Maximum: {(selectedLoan.amount - (selectedLoan.amount * selectedLoan.funded / 100)).toFixed(2)} PyUSD
+                    Minimum: 0.01 USDC • Maximum: {(selectedLoan.amount - (selectedLoan.amount * selectedLoan.funded / 100)).toFixed(2)} USDC
                   </p>
                 </div>
 

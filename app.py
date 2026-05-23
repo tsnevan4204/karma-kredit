@@ -1,3 +1,4 @@
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from run_fico_pipeline import predict_fico, credit_to_interest_and_loan
@@ -8,11 +9,13 @@ import pandas as pd
 app = Flask(__name__)
 CORS(app)
 
+DEFAULT_CHAIN = os.environ.get("CHAIN", "arc-testnet")
+
 @app.route("/api/fico-score", methods=["POST"])
 def fico_score():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm").lower()
+    chain = data.get("chain", DEFAULT_CHAIN).lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400
@@ -35,7 +38,7 @@ def fico_score():
 def wallet_analytics():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm").lower()
+    chain = data.get("chain", DEFAULT_CHAIN).lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400
@@ -96,17 +99,24 @@ def wallet_analytics():
                 "last_transaction_date": None,
                 "recent_transactions_30d": 0
             },
-            "fico_score": predict_fico(wallet, chain=chain),
+            "fico_score": _safe_fico(wallet, chain),
             "transactions": transactions
         })
     except Exception as e:
         return jsonify({"message": str(e)}), 500
 
+def _safe_fico(wallet: str, chain: str) -> float:
+    """FICO for supported indexer chains; neutral default on Arc / unknown."""
+    try:
+        return round(predict_fico(wallet, chain=chain), 2)
+    except Exception:
+        return 60.0
+
 @app.route("/api/karma-score", methods=["POST"])
 def karma_score():
     data = request.get_json()
     wallet = data.get("wallet_address")
-    chain = data.get("chain", "flow-evm").lower()
+    chain = data.get("chain", DEFAULT_CHAIN).lower()
 
     if not wallet:
         return jsonify({"message": "Missing wallet_address"}), 400

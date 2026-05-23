@@ -393,7 +393,7 @@ const InvestorDashboard = () => {
               {isLoadingInvestments ? (
                 <span className="animate-pulse">Loading...</span>
               ) : (
-                `${portfolioValue.toFixed(2)} PyUSD`
+                `${portfolioValue.toFixed(2)} USDC`
               )}
             </div>
             <div className="text-sm text-neutral-600">Principal amount</div>
@@ -408,7 +408,7 @@ const InvestorDashboard = () => {
               {isLoadingInvestments ? (
                 <span className="animate-pulse">Loading...</span>
               ) : (
-                `${totalYield.toFixed(4)} PyUSD`
+                `${totalYield.toFixed(4)} USDC`
               )}
             </div>
             <div className="text-sm text-neutral-600">
@@ -440,7 +440,7 @@ const InvestorDashboard = () => {
               {isLoadingInvestments ? (
                 <span className="animate-pulse">Loading...</span>
               ) : (
-                `${(portfolioValue + totalYield).toFixed(2)} PyUSD`
+                `${(portfolioValue + totalYield).toFixed(2)} USDC`
               )}
             </div>
             <div className="text-sm text-neutral-600">Principal + Interest</div>
@@ -460,7 +460,7 @@ const InvestorDashboard = () => {
                       <div>
                         <div className="flex items-center space-x-3 mb-2">
                           <h3 className="text-xl font-bold text-neutral-900">
-                            {investment.invested.toFixed(2)} PyUSD Investment
+                            {investment.invested.toFixed(2)} USDC Investment
                           </h3>
                           <div className={`w-3 h-3 rounded-full ${getStatusColor(investment.status)}`}></div>
                           <span className="text-sm font-medium text-neutral-600 capitalize">
@@ -499,13 +499,13 @@ const InvestorDashboard = () => {
                     <div className="grid md:grid-cols-4 gap-6 mb-4">
                       <div className="text-center">
                         <div className="text-xl font-bold text-green-600 mb-1">
-                          {investment.interestEarned.toFixed(4)} PyUSD
+                          {investment.interestEarned.toFixed(4)} USDC
                         </div>
                         <div className="text-sm text-neutral-600">Interest Earned</div>
                       </div>
                       <div className="text-center">
                         <div className="text-xl font-bold text-neutral-900 mb-1">
-                          {investment.remainingInterest.toFixed(4)} PyUSD
+                          {investment.remainingInterest.toFixed(4)} USDC
                         </div>
                         <div className="text-sm text-neutral-600">Remaining Interest</div>
                       </div>
@@ -517,7 +517,7 @@ const InvestorDashboard = () => {
                       </div>
                       <div className="text-center">
                         <div className="text-xl font-bold text-neutral-900 mb-1">
-                          {investment.monthlyPayment.toFixed(2)} PyUSD
+                          {investment.monthlyPayment.toFixed(2)} USDC
                         </div>
                         <div className="text-sm text-neutral-600">Monthly Payment</div>
                       </div>
@@ -526,11 +526,11 @@ const InvestorDashboard = () => {
                     <div className="grid md:grid-cols-2 gap-4 pt-4 border-t border-neutral-300">
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-neutral-600">Total Paid So Far:</span>
-                        <span className="font-semibold text-neutral-900">{investment.totalPaid.toFixed(4)} PyUSD</span>
+                        <span className="font-semibold text-neutral-900">{investment.totalPaid.toFixed(4)} USDC</span>
                       </div>
                       <div className="flex items-center justify-between">
                         <span className="text-sm text-neutral-600">Expected Total:</span>
-                        <span className="font-semibold text-neutral-900">{investment.totalExpected.toFixed(2)} PyUSD</span>
+                        <span className="font-semibold text-neutral-900">{investment.totalExpected.toFixed(2)} USDC</span>
                       </div>
                       {investment.lastPayment && (
                         <div className="flex items-center justify-between">
@@ -580,7 +580,7 @@ const InvestorDashboard = () => {
               <Target className="w-10 h-10 text-white" />
             </div>
             <h3 className="text-2xl font-bold text-neutral-900 mb-4">Ready to start investing?</h3>
-            <p className="text-lg text-neutral-600 mb-8">Browse available loans and start earning interest on your PyUSD</p>
+            <p className="text-lg text-neutral-600 mb-8">Browse available loans and start earning interest on your USDC</p>
             <button
               onClick={() => navigate('/marketplace')}
               className="btn-primary text-lg px-8 py-4"
