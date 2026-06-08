@@ -1,5 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useWallet } from '../contexts/WalletContext';
+import CircleWalletPanel from '../wallets/borrower/CircleWalletPanel';
+import { useKarma } from '../hooks/useKarma';
+import { KarmaBadge, FirstTimePill, IdentityVerifiedPill, ProbationWarning } from '../components/KarmaBadge';
+import FundingSourcesPanel from '../components/FundingSourcesPanel';
 import { 
   TrendingUp, 
   Clock, 
@@ -23,18 +27,20 @@ import {
 } from 'lucide-react';
 
 const BorrowerDashboard = () => {
-  const { 
-    account, 
-    userRole, 
-    walletAnalytics, 
-    isLoadingAnalytics, 
-    getWalletAnalytics, 
+  const {
+    account,
+    userRole,
+    walletAnalytics,
+    isLoadingAnalytics,
+    getWalletAnalytics,
     getFicoScore,
     submitLoanRequest,
     getUserLoans,
-    repayLoan
+    repayLoan,
+    connectWallet,
   } = useWallet();
   const [ficoData, setFicoData] = useState(null);
+  const karma = useKarma(account);   // C9: on-chain karma + identity binding
   const [isSubmittingLoan, setIsSubmittingLoan] = useState(false);
   const [myLoans, setMyLoans] = useState([]);
   const [isLoadingLoans, setIsLoadingLoans] = useState(false);
@@ -107,15 +113,7 @@ const BorrowerDashboard = () => {
   const handleSubmitLoan = async (e) => {
     e.preventDefault();
     
-    if (!ficoData) {
-      alert('Please wait for your karma to load before submitting a loan request.');
-      return;
-    }
-
-    if (!ficoData.interest_rate) {
-      alert('Your karma is too low for loan approval. Please improve your Karma first.');
-      return;
-    }
+    // Karma gate disabled for testnet — on mainnet, re-enable ficoData checks
 
     // Validate emergency contacts
     if (!loanForm.emergencyContact1.name || !loanForm.emergencyContact1.phone) {
@@ -156,7 +154,7 @@ const BorrowerDashboard = () => {
       // Prepare loan data for smart contract
       const loanData = {
         ...loanForm,
-        interestRate: ficoData.interest_rate, // Use calculated interest rate from Karma
+        interestRate: ficoData?.interest_rate ?? 10, // default 10% APR if karma API unavailable
         durationInMonths: parseInt(loanForm.duration) // Use months instead of days
       };
 
@@ -253,34 +251,13 @@ const BorrowerDashboard = () => {
     }
   };
 
-  // Calculate loan metrics using CONTRACT data only - no frontend calculations
+  // Calculate loan metrics — remainingBalance comes from on-chain getRemainingBalance()
   const calculateLoanMetrics = (loan) => {
-    // Safety checks for contract data
-    const principal = parseFloat(loan.amount) || 0;
-    const duration = parseInt(loan.duration) || 1;
-    const monthlyPayment = parseFloat(loan.monthlyPayment) || 0;
-    const totalPaid = parseFloat(loan.totalPaid) || 0;
-    
-    // Calculate total amount from contract: monthly payment * duration
-    const totalAmount = monthlyPayment * duration;
-    const remainingBalance = Math.max(0, totalAmount - totalPaid);
-    const paymentsRemaining = monthlyPayment > 0 ? Math.min(duration, Math.ceil(remainingBalance / monthlyPayment)) : 0;
-    
-    console.log(`💰 CONTRACT-BASED Payment calculation:`, {
-      principal,
-      duration,
-      monthlyPayment: monthlyPayment.toFixed(4),
-      totalAmount: totalAmount.toFixed(2),
-      totalPaid,
-      remainingBalance: remainingBalance.toFixed(2),
-      paymentsRemaining,
-      rawContractData: {
-        amount: loan.amount,
-        duration: loan.duration, 
-        monthlyPayment: loan.monthlyPayment,
-        totalPaid: loan.totalPaid
-      }
-    });
+    const monthlyPayment  = parseFloat(loan.monthlyPayment) || 0;
+    const totalPaid       = parseFloat(loan.totalPaid) || 0;
+    const remainingBalance = parseFloat(loan.remainingBalance ?? 0);   // exact on-chain value
+    const totalAmount     = totalPaid + remainingBalance;
+    const paymentsRemaining = monthlyPayment > 0 ? Math.ceil(remainingBalance / monthlyPayment) : 0;
     
     return {
       totalAmount,
@@ -288,7 +265,7 @@ const BorrowerDashboard = () => {
       totalPaid,
       remainingBalance,
       paymentsRemaining,
-      duration
+      duration: loan.duration ?? loan.durationMonths ?? null,
     };
   };
 
@@ -305,7 +282,7 @@ const BorrowerDashboard = () => {
           <p className="text-neutral-600 mb-6">
             Access your borrower dashboard and manage your loans
           </p>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={connectWallet}>
             Connect Wallet
           </button>
         </div>
@@ -313,7 +290,7 @@ const BorrowerDashboard = () => {
     );
   }
 
-  if (userRole !== 'business') {
+  if (userRole !== 'borrower') {
     return (
       <div className="min-h-screen bg-gradient-to-br from-primary-50 to-karma-50 flex items-center justify-center">
         <div className="text-center max-w-md mx-auto px-6">
@@ -321,13 +298,13 @@ const BorrowerDashboard = () => {
             <Building2 className="w-10 h-10 text-neutral-400" />
           </div>
           <h1 className="text-2xl font-bold text-neutral-900 mb-4">
-            Business Access Required
+            Borrower Access Required
           </h1>
           <p className="text-neutral-600 mb-6">
-            This dashboard is only available for business users. You are currently registered as an {userRole || 'unregistered'} user.
+            This dashboard is only available for borrowers. You are currently registered as an {userRole || 'unregistered'} user.
           </p>
           <p className="text-sm text-neutral-500">
-            Disconnect and reconnect your wallet, then select "Business / Borrower" during registration.
+            Disconnect and reconnect your wallet, then select "Borrower" during registration.
           </p>
         </div>
       </div>
@@ -376,33 +353,51 @@ const BorrowerDashboard = () => {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* Wallet Options */}
+        <div className="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* MetaMask — already connected */}
+          <div className="bg-white border border-neutral-200 rounded-2xl p-5 flex items-center gap-4">
+            <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center text-orange-500 font-bold">M</div>
+            <div>
+              <p className="font-semibold text-neutral-900 text-sm">MetaMask (connected)</p>
+              <p className="text-xs text-neutral-500 font-mono truncate max-w-[200px]">{account}</p>
+            </div>
+            <span className="ml-auto text-xs bg-green-100 text-green-700 px-2 py-1 rounded-full">Active</span>
+          </div>
+          {/* Circle OTP Wallet */}
+          <CircleWalletPanel onAddressReady={(addr) => console.log('Circle wallet ready:', addr)} />
+        </div>
+
         {/* Karma Score Card */}
         <div className="bg-white rounded-2xl shadow-lg p-8 mb-8 border border-neutral-200">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-6">
               <div className="relative">
                 {(() => {
-                  const karmaPoints = Math.round(ficoData?.fico_score || walletAnalytics?.fico_score || 0);
-                  const percentage = Math.min((karmaPoints / 850) * 100, 100); // Karma points go up to 850
-                  
-                  // Determine color based on karma ranges
+                  // C9: prefer on-chain karma (0-100); fall back to legacy FICO scaled to 100
+                  const karmaPoints = karma.karma != null
+                    ? karma.karma
+                    : Math.round((ficoData?.fico_score || walletAnalytics?.fico_score || 70) / 8.5);
+                  const percentage = Math.min(karmaPoints, 100);     // direct 0-100 scale now
+
                   let karmaColor = 'text-red-500';
                   let bgColor = 'from-red-500 to-red-600';
                   let statusColor = 'bg-red-500';
-                  
-                  if (karmaPoints >= 800) {
+
+                  if (karmaPoints >= 85) {
                     karmaColor = 'text-green-500';
                     bgColor = 'from-green-500 to-green-600';
                     statusColor = 'bg-green-500';
-                  } else if (karmaPoints >= 740) {
+                  } else if (karmaPoints >= 70) {
                     karmaColor = 'text-blue-500';
                     bgColor = 'from-blue-500 to-blue-600';
                     statusColor = 'bg-blue-500';
-                  } else if (karmaPoints >= 670) {
+                  } else if (karmaPoints >= 50) {
                     karmaColor = 'text-yellow-500';
                     bgColor = 'from-yellow-500 to-yellow-600';
                     statusColor = 'bg-yellow-500';
-                  } else if (karmaPoints >= 580) {
+                  } else if (karmaPoints >= 30) {
                     karmaColor = 'text-orange-500';
                     bgColor = 'from-orange-500 to-orange-600';
                     statusColor = 'bg-orange-500';
@@ -449,9 +444,9 @@ const BorrowerDashboard = () => {
                       
                       {/* Status indicator */}
                                               <div className={`absolute -bottom-2 -right-2 w-8 h-8 ${statusColor} rounded-full flex items-center justify-center`}>
-                          {karmaPoints >= 670 ? (
+                          {karmaPoints >= 70 ? (
                             <CheckCircle className="w-5 h-5 text-white" />
-                          ) : karmaPoints >= 580 ? (
+                          ) : karmaPoints >= 50 ? (
                             <AlertCircle className="w-5 h-5 text-white" />
                           ) : (
                             <X className="w-5 h-5 text-white" />
@@ -463,15 +458,17 @@ const BorrowerDashboard = () => {
               </div>
               
               <div>
-                <h2 className="text-2xl font-bold text-neutral-900 mb-1">
+                <h2 className="text-2xl font-bold text-neutral-900 mb-1 flex items-center gap-2">
                   Karma
+                  {karma.firstTimeUser && <FirstTimePill />}
+                  {karma.hasBinding && <IdentityVerifiedPill />}
                 </h2>
                 <p className="text-neutral-600 mb-2">
-                  {ficoData?.interest_rate ? 
-                    `${ficoData.interest_rate}% interest rate available` : 
-                    'Karma too low for loans'
-                  }
+                  {karma.suggestedBps
+                    ? `${(karma.suggestedBps / 100).toFixed(1)}% APR available based on your karma`
+                    : 'Loading suggested rate…'}
                 </p>
+                {karma.loanCap && <div className="mb-2"><ProbationWarning loanCap={karma.loanCap} /></div>}
                 
                 {/* Karma Range Indicator */}
                 <div className="mb-3">
@@ -575,11 +572,18 @@ const BorrowerDashboard = () => {
                             <span>{progressPercentage.toFixed(1)}% paid</span>
                           </div>
                           <div className="w-full bg-neutral-200 rounded-full h-2">
-                            <div 
+                            <div
                               className="bg-gradient-to-r from-primary-500 to-karma-500 h-2 rounded-full transition-all duration-500"
                               style={{ width: `${Math.min(progressPercentage, 100)}%` }}
                             ></div>
                           </div>
+                        </div>
+                      )}
+
+                      {/* Funding sources — pools, bids, direct lenders */}
+                      {loan.status !== 'repaid' && (
+                        <div className="mt-4">
+                          <FundingSourcesPanel loanId={loan.id} allowAutoFund={true} />
                         </div>
                       )}
                     </div>
@@ -744,12 +748,20 @@ const BorrowerDashboard = () => {
                   required
                 >
                   <option value="">Select category</option>
-                  <option value="agriculture">Agriculture</option>
-                  <option value="technology">Technology</option>
-                  <option value="education">Education</option>
-                  <option value="retail">Retail</option>
-                  <option value="healthcare">Healthcare</option>
+                  <option value="agriculture">Agriculture — AgriPool</option>
+                  <option value="diversity">Women-led / Diversity — WomenFoundersPool</option>
+                  <option value="premium">Premium — KarmaMax (requires karma ≥ 80)</option>
+                  <option value="technology">Technology — TechPool</option>
+                  <option value="education">Education — EducationPool</option>
+                  <option value="healthcare">Healthcare — HealthcarePool</option>
+                  <option value="retail">Retail — RetailPool</option>
+                  <option value="energy">Green Energy — GreenEnergyPool</option>
+                  <option value="food">Food &amp; Beverage — FoodAndBevPool</option>
+                  <option value="general">General — GeneralPool (wildcard)</option>
                 </select>
+                <p className="text-xs text-neutral-500 mt-1">
+                  Picking a category determines which ETF pools may auto-fund your loan.
+                </p>
               </div>
 
               <div>

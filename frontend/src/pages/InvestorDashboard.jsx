@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 const InvestorDashboard = () => {
-  const { account, userRole, walletAnalytics, isLoadingAnalytics, getWalletAnalytics, getAllLoans, getFicoScore } = useWallet();
+  const { account, userRole, walletAnalytics, isLoadingAnalytics, getWalletAnalytics, getAllLoans, getFicoScore, connectWallet } = useWallet();
   const navigate = useNavigate();
   const [portfolioValue, setPortfolioValue] = useState(0);
   const [totalYield, setTotalYield] = useState(0);
@@ -313,7 +313,7 @@ const InvestorDashboard = () => {
           <p className="text-neutral-600 mb-6">
             Access your investment portfolio and track your earnings
           </p>
-          <button className="btn-primary">
+          <button className="btn-primary" onClick={connectWallet}>
             Connect Wallet
           </button>
         </div>

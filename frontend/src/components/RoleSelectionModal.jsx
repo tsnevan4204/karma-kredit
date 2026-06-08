@@ -22,7 +22,7 @@ const RoleSelectionModal = () => {
 
   const roles = [
     {
-      id: 'business',
+      id: 'borrower',
       title: 'Business / Borrower',
       description: 'I want to request loans for my business',
       icon: Building2,
@@ -195,7 +195,7 @@ const RoleSelectionModal = () => {
                 Registering...
               </>
             ) : (
-              `Register as ${selectedRole === 'business' ? 'Business' : selectedRole === 'investor' ? 'Investor' : 'User'}`
+              `Register as ${selectedRole === 'borrower' ? 'Borrower' : selectedRole === 'investor' ? 'Investor' : 'User'}`
             )}
           </button>
         </div>

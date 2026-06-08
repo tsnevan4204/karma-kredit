@@ -1,0 +1,38 @@
+2026-06-06 14:44:13,630 DEBUG urllib3.connectionpool: Starting new HTTPS connection (1): pypi.org:443
+2026-06-06 14:44:13,741 DEBUG urllib3.connectionpool: https://pypi.org:443 "GET /pypi/lightning-sdk/json HTTP/11" 200 31962
+2026-06-06 14:44:13,883 DEBUG lightning_sdk.lightning_cloud.login: successfully loaded credentials from env
+2026-06-06 14:44:13,883 INFO skillforge.adapters.lightning: LightningModelRouter ready (model=lightning/llama-4)
+2026-06-06 14:44:13,885 INFO skillforge.adapters.fakes: resolve_adapters: ModelRouter -> Lightning (litai)
+2026-06-06 14:44:13,885 INFO skillforge.agent.core: PlanningAgent ready. project=''
+2026-06-06 14:44:13,886 INFO skillforge.agent.core: classifier: intent=REQUEST_SUMMARY message='Give me a status summary.'
+2026-06-06 14:44:13,890 INFO skillforge.agent.context_engine: context_engine: saved snapshot project=
+2026-06-06 14:44:13,890 INFO skillforge.agent.core: PlanningAgent shutdown; snapshot saved.
+2026-06-06 14:45:04,309 DEBUG urllib3.connectionpool: Starting new HTTPS connection (1): pypi.org:443
+2026-06-06 14:45:04,359 DEBUG urllib3.connectionpool: https://pypi.org:443 "GET /pypi/lightning-sdk/json HTTP/11" 200 31962
+2026-06-06 14:45:04,397 DEBUG lightning_sdk.lightning_cloud.login: successfully loaded credentials from env
+2026-06-06 14:45:04,397 INFO skillforge.adapters.lightning: LightningModelRouter ready (model=lightning/llama-4)
+2026-06-06 14:45:04,398 INFO skillforge.adapters.fakes: resolve_adapters: ModelRouter -> Lightning (litai)
+2026-06-06 14:45:04,399 INFO skillforge.agent.core: PlanningAgent ready. project=''
+2026-06-06 14:45:04,399 INFO skillforge.agent.core: classifier: intent=ONBOARD_NEW_PROJECT message="Let's onboard a new project called Karma-Kredit."
+2026-06-06 14:45:04,400 INFO skillforge.agent.context_engine: context_engine: saved snapshot project=Let's onboard a new project called Karma-Kredit.
+2026-06-06 14:45:04,400 INFO skillforge.agent.core: PlanningAgent shutdown; snapshot saved.
+2026-06-06 14:48:20,314 INFO skillforge.graphs.ingestion: ingest_trace: session=session-honest-001 events=2
+2026-06-06 14:48:20,321 INFO skillforge.graphs.ingestion:   sanitize: removed=0 patterns=[]
+2026-06-06 14:48:20,323 DEBUG skillforge.adapters.fakes: FakeModelRouter prompt[:200]='Extract a skill from this sanitized session trace. Trace as JSON follows:\n\n{\n  "session_id": "session-honest-001",\n  "events": [\n    {\n      "tool": "http.get",\n      "args": {\n        "url": "https:/'
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   distill: skill name=fetch_user_data
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   static: passed=True violations=[]
+2026-06-06 14:48:20,323 DEBUG skillforge.adapters.fakes: FakeSandbox observation: {'network_egress': ['api.internal.example'], 'fs_writes': [], 'tools_called': ['http.get'], 'embedded_instructions': []}
+2026-06-06 14:48:20,323 DEBUG skillforge.adapters.fakes: FakeSandbox observation: {'network_egress': [], 'fs_writes': ['./detected-fs-write'], 'tools_called': ['fs.write'], 'embedded_instructions': []}
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   sandbox: passed=True evidence=[]
+2026-06-06 14:48:20,323 INFO skillforge.registry.registry: registry: stored skill id=skill-canned-001 sig=88152e076aea
+2026-06-06 14:48:20,323 INFO skillforge.graphs.execution: execution: task='pull user data for user 42'
+2026-06-06 14:48:20,323 INFO skillforge.executor.executor: executor: selected skill=fetch_user_data
+2026-06-06 14:48:20,323 INFO skillforge.executor.executor: executor:   exec → http.get https://api.internal.example/users/${user_id}
+2026-06-06 14:48:20,323 INFO skillforge.executor.executor: executor:   exec → fs.write ./cache/user_${user_id}.json
+2026-06-06 14:48:20,323 INFO skillforge.registry.registry: registry: stored skill id=skill-canned-001 sig=5c5446ec6994
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion: ingest_document: doc=skills session=session-honest-002
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   sanitize: removed=0
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   static: passed=True violations=[] unverified_refs=[]
+2026-06-06 14:48:20,323 DEBUG skillforge.adapters.fakes: FakeSandbox observation: {'network_egress': [], 'fs_writes': [], 'tools_called': [], 'embedded_instructions': []}
+2026-06-06 14:48:20,323 INFO skillforge.graphs.ingestion:   sandbox: passed=True evidence=[]
+2026-06-06 14:48:20,323 INFO skillforge.registry.registry: registry: stored doc=skills sig=e9a7926f72b4

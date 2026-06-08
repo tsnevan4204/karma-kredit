@@ -1,111 +1,121 @@
 import { useState } from 'react';
 import { useWallet } from '../contexts/WalletContext';
-import { 
-  TrendingUp, 
-  Shield, 
-  Users, 
+import { useLendingPool } from '../hooks/useLendingPool';
+import {
+  TrendingUp,
+  Shield,
+  Users,
   ArrowRight,
   PieChart,
   Target,
   Clock,
-  DollarSign
+  DollarSign,
+  RefreshCw,
+  Sprout,
+  Heart,
+  Sparkles,
+  X,
 } from 'lucide-react';
 
+// Visual presets keyed by pool name. Description / icon / colour only — all
+// numeric data comes from chain.
+const PRESETS = {
+  AgriPool: {
+    description: 'Sustainable agriculture and farming initiatives',
+    icon: Sprout,
+    accent: 'from-emerald-500 to-emerald-600',
+    pill:   'bg-emerald-100 text-emerald-800',
+    risk:   'low',
+  },
+  WomenFoundersPool: {
+    description: 'Supporting women-led businesses and startups',
+    icon: Heart,
+    accent: 'from-rose-500 to-rose-600',
+    pill:   'bg-rose-100 text-rose-800',
+    risk:   'medium',
+  },
+  KarmaMax: {
+    description: 'High-Karma borrowers with excellent track records',
+    icon: Sparkles,
+    accent: 'from-violet-500 to-violet-600',
+    pill:   'bg-violet-100 text-violet-800',
+    risk:   'high',
+  },
+};
+
+const presetFor = (name) => PRESETS[name] || {
+  description: 'Diversified loan pool',
+  icon: PieChart,
+  accent: 'from-primary-500 to-primary-600',
+  pill: 'bg-neutral-100 text-neutral-800',
+  risk: 'medium',
+};
+
 const StakePool = () => {
-  const { account } = useWallet();
+  const { account, connectWallet } = useWallet();
+  const { pools, loading, error, refresh, deposit, withdraw } = useLendingPool();
   const [selectedPool, setSelectedPool] = useState(null);
-  const [stakeAmount, setStakeAmount] = useState('');
+  const [mode,         setMode]         = useState('deposit');   // 'deposit' | 'withdraw'
+  const [amount,       setAmount]       = useState('');
+  const [submitting,   setSubmitting]   = useState(false);
 
-  const pools = [
-    {
-      id: 'agripool',
-      name: 'AgriPool',
-      description: 'Sustainable agriculture and farming initiatives',
-      apy: 8.5,
-      risk: 'low',
-      totalStaked: 1250000,
-      totalBorrowers: 45,
-      avgRepaymentRate: 98.2,
-      minStake: 100,
-      maxStake: 50000,
-      category: 'agriculture',
-      color: 'primary'
-    },
-    {
-      id: 'womenfounders',
-      name: 'WomenFoundersPool',
-      description: 'Supporting women-led businesses and startups',
-      apy: 12.2,
-      risk: 'medium',
-      totalStaked: 890000,
-      totalBorrowers: 28,
-      avgRepaymentRate: 96.8,
-      minStake: 250,
-      maxStake: 25000,
-      category: 'diversity',
-      color: 'karma'
-    },
-    {
-      id: 'karmamax',
-      name: 'KarmaMax',
-      description: 'High-Karma borrowers with excellent track records',
-      apy: 15.8,
-      risk: 'high',
-      totalStaked: 650000,
-      totalBorrowers: 15,
-      avgRepaymentRate: 99.1,
-      minStake: 500,
-      maxStake: 10000,
-      category: 'premium',
-      color: 'neutral'
-    }
-  ];
-
-  const getColorClasses = (color) => {
-    switch (color) {
-      case 'primary': return 'from-primary-500 to-primary-600';
-      case 'karma': return 'from-karma-500 to-karma-600';
-      case 'neutral': return 'from-neutral-600 to-neutral-700';
-      default: return 'from-primary-500 to-primary-600';
-    }
+  // Projected APY shown on cards: we estimate from share price growth. For an
+  // unproven pool (sharePrice == 1), fall back to a static suggested APY based
+  // on the category. This is purely a UI hint until C9 indexes real history.
+  const estimatedApy = (pool) => {
+    const apy = (pool.sharePrice - 1) * 100;
+    if (apy >= 1) return apy.toFixed(1);
+    // pre-yield defaults
+    return ({ AgriPool: 8.5, WomenFoundersPool: 12.2, KarmaMax: 15.8 })[pool.name] ?? 10;
   };
 
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'low': return 'bg-green-100 text-green-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'high': return 'bg-red-100 text-red-800';
-      default: return 'bg-neutral-100 text-neutral-800';
-    }
-  };
-
-  const handleStake = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!account) {
-      alert('Please connect your wallet first');
-      return;
+    if (!account) { alert('Connect your wallet first'); return; }
+    if (!amount || Number(amount) <= 0) { alert('Enter a positive amount'); return; }
+
+    setSubmitting(true);
+    try {
+      if (mode === 'deposit') {
+        await deposit(selectedPool.id, amount);
+        alert(`Deposited ${amount} USDC into ${selectedPool.name}`);
+      } else {
+        await withdraw(selectedPool.id, amount);
+        alert(`Withdrew ${amount} shares from ${selectedPool.name}`);
+      }
+      setAmount('');
+      setSelectedPool(null);
+    } catch (err) {
+      console.error(err);
+      const msg = err.shortMessage || err.message || String(err);
+      alert(`Transaction failed: ${msg}`);
+    } finally {
+      setSubmitting(false);
     }
-    if (!stakeAmount || stakeAmount < selectedPool.minStake || stakeAmount > selectedPool.maxStake) {
-      alert(`Please enter a valid amount between ${selectedPool.minStake} and ${selectedPool.maxStake} USDC`);
-      return;
-    }
-    // Here you would integrate with the smart contract
-    console.log('Staking:', stakeAmount, 'in', selectedPool.name);
-          alert(`Successfully staked ${stakeAmount} USDC in ${selectedPool.name}!`);
-    setStakeAmount('');
-    setSelectedPool(null);
   };
+
+  // Portfolio aggregate across all pools the user has shares in
+  const portfolio = pools.reduce((acc, p) => {
+    const value = parseFloat(p.userValue || '0');
+    const shares = parseFloat(p.userShares || '0');
+    if (shares > 0) {
+      acc.totalValue += value;
+      acc.activePools += 1;
+    }
+    return acc;
+  }, { totalValue: 0, activePools: 0 });
 
   if (!account) {
     return (
       <div className="min-h-screen bg-neutral-50 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+        <div className="max-w-md mx-auto px-6 text-center">
           <h1 className="text-2xl font-bold text-neutral-900 mb-4">
             Connect your wallet to access staking pools
           </h1>
-          <p className="text-neutral-600">
-            You need to connect your MetaMask wallet to stake in our investment pools.
+          <p className="text-neutral-600 mb-6">
+            ETF-style USDC pools: deposit once, capital auto-deploys to vetted borrowers.
           </p>
+          <button onClick={connectWallet} className="btn-primary">Connect Wallet</button>
         </div>
       </div>
     );
@@ -114,175 +124,162 @@ const StakePool = () => {
   return (
     <div className="min-h-screen bg-neutral-50 py-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+
         {/* Header */}
-        <div className="mb-8">
-          <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-2">
-            Investment Pools
-          </h1>
-          <p className="text-lg text-neutral-600">
-            Stake in curated pools and earn competitive yields while supporting specific causes
-          </p>
+        <div className="mb-8 flex items-start justify-between">
+          <div>
+            <h1 className="text-3xl md:text-4xl font-bold text-neutral-900 mb-2">
+              ETF-Style Lending Pools
+            </h1>
+            <p className="text-lg text-neutral-600">
+              Stake USDC into curated pools — capital is auto-allocated to high-Karma borrowers in each category.
+            </p>
+          </div>
+          <button
+            onClick={refresh}
+            disabled={loading}
+            className="p-3 text-neutral-600 hover:text-neutral-900 hover:bg-white rounded-xl transition-colors"
+            title="Refresh on-chain data"
+          >
+            <RefreshCw className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </button>
         </div>
 
+        {error && (
+          <div className="mb-6 p-4 bg-red-50 border border-red-200 text-red-700 rounded-xl text-sm">
+            {error}
+          </div>
+        )}
+
         {/* Pool Cards */}
+        {pools.length === 0 && !loading && (
+          <div className="text-center py-16 text-neutral-500">
+            No pools available yet. Run the deploy script to seed the default pools.
+          </div>
+        )}
+
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {pools.map((pool) => (
-            <div key={pool.id} className="card hover:shadow-medium transition-shadow">
-              {/* Pool Header */}
-              <div className={`bg-gradient-to-r ${getColorClasses(pool.color)} text-white p-4 rounded-xl mb-4`}>
-                <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-bold">{pool.name}</h3>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20`}>
-                    {pool.risk} risk
-                  </span>
-                </div>
-                <p className="text-white text-opacity-90 text-sm">
-                  {pool.description}
-                </p>
-              </div>
-
-              {/* Pool Stats */}
-              <div className="space-y-4 mb-6">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <TrendingUp className="w-4 h-4 text-neutral-400" />
-                    <span className="text-sm text-neutral-600">APY</span>
+          {pools.map((pool) => {
+            const preset = presetFor(pool.name);
+            const Icon = preset.icon;
+            const userVal = parseFloat(pool.userValue);
+            return (
+              <div key={pool.id} className="card hover:shadow-medium transition-shadow">
+                <div className={`bg-gradient-to-r ${preset.accent} text-white p-4 rounded-xl mb-4`}>
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Icon className="w-5 h-5" />
+                      <h3 className="text-xl font-bold">{pool.name}</h3>
+                    </div>
+                    <span className="px-2 py-1 rounded-full text-xs font-medium bg-white bg-opacity-20">
+                      {preset.risk} risk
+                    </span>
                   </div>
-                  <span className="text-lg font-bold text-primary-600">
-                    {pool.apy}%
-                  </span>
+                  <p className="text-white text-opacity-90 text-sm">{preset.description}</p>
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <DollarSign className="w-4 h-4 text-neutral-400" />
-                    <span className="text-sm text-neutral-600">Total Staked</span>
+                <div className="space-y-3 mb-5">
+                  <Row icon={TrendingUp} label="Est. APY" value={`${estimatedApy(pool)}%`} highlight />
+                  <Row icon={DollarSign} label="Total Assets" value={`${Number(pool.totalAssets).toFixed(2)} USDC`} />
+                  <Row icon={PieChart}   label="Deployed"      value={`${Number(pool.outstanding).toFixed(2)} USDC`} />
+                  <Row icon={Shield}     label="Min Karma"     value={`${pool.minKarma}`} />
+                  <Row icon={Users}      label="Category"      value={pool.category} />
+                </div>
+
+                {userVal > 0 && (
+                  <div className="mb-4 p-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+                    <div className="text-xs text-emerald-700 font-medium mb-1">Your position</div>
+                    <div className="text-lg font-bold text-emerald-900">
+                      {userVal.toFixed(2)} USDC
+                    </div>
+                    <div className="text-xs text-emerald-600">
+                      {Number(pool.userShares).toFixed(2)} shares · share price {pool.sharePrice.toFixed(4)}
+                    </div>
                   </div>
-                  <span className="text-sm font-medium text-neutral-900">
-                    {(pool.totalStaked / 1000).toFixed(0)}K USDC
-                  </span>
-                </div>
+                )}
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-4 h-4 text-neutral-400" />
-                    <span className="text-sm text-neutral-600">Borrowers</span>
-                  </div>
-                  <span className="text-sm font-medium text-neutral-900">
-                    {pool.totalBorrowers}
-                  </span>
-                </div>
-
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-2">
-                    <Shield className="w-4 h-4 text-neutral-400" />
-                    <span className="text-sm text-neutral-600">Repayment Rate</span>
-                  </div>
-                  <span className="text-sm font-medium text-green-600">
-                    {pool.avgRepaymentRate}%
-                  </span>
-                </div>
-              </div>
-
-              {/* Stake Range */}
-              <div className="mb-6 p-3 bg-neutral-50 rounded-xl">
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-neutral-600">Min Stake</span>
-                  <span className="text-neutral-600">Max Stake</span>
-                </div>
-                <div className="flex justify-between text-sm font-medium">
-                                  <span className="text-neutral-900">{pool.minStake.toLocaleString()} USDC</span>
-                <span className="text-neutral-900">{pool.maxStake.toLocaleString()} USDC</span>
+                <div className="flex gap-2">
+                  <button
+                    onClick={() => { setSelectedPool(pool); setMode('deposit'); }}
+                    className="flex-1 btn-primary"
+                    disabled={!pool.active}
+                  >
+                    Stake <ArrowRight className="w-4 h-4 ml-2 inline" />
+                  </button>
+                  {userVal > 0 && (
+                    <button
+                      onClick={() => { setSelectedPool(pool); setMode('withdraw'); }}
+                      className="px-4 py-2 border border-neutral-300 text-neutral-700 rounded-xl text-sm font-medium hover:bg-neutral-50"
+                    >
+                      Withdraw
+                    </button>
+                  )}
                 </div>
               </div>
-
-              {/* CTA */}
-              <button
-                onClick={() => setSelectedPool(pool)}
-                className="w-full btn-primary"
-              >
-                Stake Now
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </button>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Portfolio Summary */}
         <div className="card">
-          <h2 className="text-xl font-semibold text-neutral-900 mb-6">
-            Your Portfolio Summary
-          </h2>
-          <div className="grid md:grid-cols-4 gap-6">
-            <div className="text-center p-4 bg-neutral-50 rounded-xl">
-              <PieChart className="w-8 h-8 text-primary-600 mx-auto mb-2" />
-              <p className="text-sm text-neutral-600">Total Staked</p>
-              <p className="text-xl font-bold text-neutral-900">3,500 USDC</p>
-            </div>
-            <div className="text-center p-4 bg-neutral-50 rounded-xl">
-              <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
-              <p className="text-sm text-neutral-600">Total Earned</p>
-              <p className="text-xl font-bold text-green-600">420 USDC</p>
-            </div>
-            <div className="text-center p-4 bg-neutral-50 rounded-xl">
-              <Target className="w-8 h-8 text-karma-600 mx-auto mb-2" />
-              <p className="text-sm text-neutral-600">Avg. APY</p>
-              <p className="text-xl font-bold text-karma-600">11.2%</p>
-            </div>
-            <div className="text-center p-4 bg-neutral-50 rounded-xl">
-              <Clock className="w-8 h-8 text-neutral-600 mx-auto mb-2" />
-              <p className="text-sm text-neutral-600">Active Pools</p>
-              <p className="text-xl font-bold text-neutral-900">2</p>
-            </div>
+          <h2 className="text-xl font-semibold text-neutral-900 mb-6">Your Portfolio</h2>
+          <div className="grid md:grid-cols-3 gap-6">
+            <StatTile icon={PieChart}  iconClass="text-primary-600" label="Total Value" value={`${portfolio.totalValue.toFixed(2)} USDC`} />
+            <StatTile icon={Target}    iconClass="text-karma-600"   label="Active Pools" value={String(portfolio.activePools)} />
+            <StatTile icon={Clock}     iconClass="text-neutral-600" label="Available Pools" value={String(pools.length)} />
           </div>
         </div>
 
-        {/* Stake Modal */}
+        {/* Stake / Withdraw Modal */}
         {selectedPool && (
           <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
             <div className="bg-white rounded-2xl p-6 max-w-md w-full">
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-lg font-semibold text-neutral-900">
-                  Stake in {selectedPool.name}
+                  {mode === 'deposit' ? 'Stake in' : 'Withdraw from'} {selectedPool.name}
                 </h3>
-                <button
-                  onClick={() => setSelectedPool(null)}
-                  className="text-neutral-400 hover:text-neutral-600"
-                >
-                  ×
+                <button onClick={() => setSelectedPool(null)} className="text-neutral-400 hover:text-neutral-600">
+                  <X className="w-5 h-5" />
                 </button>
               </div>
 
-              <form onSubmit={handleStake} className="space-y-4">
+              <form onSubmit={handleSubmit} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-neutral-700 mb-2">
-                    Amount to Stake (USDC)
+                    {mode === 'deposit' ? 'Amount to stake (USDC)' : 'Shares to withdraw'}
                   </label>
                   <input
                     type="number"
-                    value={stakeAmount}
-                    onChange={(e) => setStakeAmount(e.target.value)}
-                    placeholder={`Enter amount (${selectedPool.minStake}-${selectedPool.maxStake})`}
+                    step="any"
+                    value={amount}
+                    onChange={(e) => setAmount(e.target.value)}
+                    placeholder={mode === 'deposit' ? 'e.g. 100' : `Max ${Number(selectedPool.userShares).toFixed(2)}`}
                     className="input-field"
-                    min={selectedPool.minStake}
-                    max={selectedPool.maxStake}
                     required
                   />
-                  <p className="text-xs text-neutral-500 mt-1">
-                    Min: {selectedPool.minStake.toLocaleString()} USDC | Max: {selectedPool.maxStake.toLocaleString()} USDC
-                  </p>
+                  {mode === 'withdraw' && (
+                    <button
+                      type="button"
+                      onClick={() => setAmount(selectedPool.userShares)}
+                      className="text-xs text-primary-600 mt-1 underline"
+                    >
+                      Use max ({Number(selectedPool.userShares).toFixed(2)})
+                    </button>
+                  )}
                 </div>
 
-                <div className="p-3 bg-neutral-50 rounded-xl">
-                  <div className="flex justify-between text-sm mb-1">
-                    <span className="text-neutral-600">Expected APY</span>
-                    <span className="font-medium text-primary-600">{selectedPool.apy}%</span>
+                <div className="p-3 bg-neutral-50 rounded-xl text-sm space-y-1">
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Share price</span>
+                    <span className="font-medium">{selectedPool.sharePrice.toFixed(6)}</span>
                   </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-neutral-600">Risk Level</span>
-                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRiskColor(selectedPool.risk)}`}>
-                      {selectedPool.risk}
-                    </span>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Est. APY</span>
+                    <span className="font-medium text-primary-600">{estimatedApy(selectedPool)}%</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-neutral-600">Pool category</span>
+                    <span className="font-medium">{selectedPool.category}</span>
                   </div>
                 </div>
 
@@ -291,14 +288,16 @@ const StakePool = () => {
                     type="button"
                     onClick={() => setSelectedPool(null)}
                     className="flex-1 btn-secondary"
+                    disabled={submitting}
                   >
                     Cancel
                   </button>
                   <button
                     type="submit"
                     className="flex-1 btn-primary"
+                    disabled={submitting}
                   >
-                    Confirm Stake
+                    {submitting ? 'Submitting…' : (mode === 'deposit' ? 'Confirm Stake' : 'Confirm Withdraw')}
                   </button>
                 </div>
               </form>
@@ -310,4 +309,24 @@ const StakePool = () => {
   );
 };
 
-export default StakePool; 
+const Row = ({ icon: Icon, label, value, highlight }) => (
+  <div className="flex items-center justify-between">
+    <div className="flex items-center space-x-2">
+      <Icon className="w-4 h-4 text-neutral-400" />
+      <span className="text-sm text-neutral-600">{label}</span>
+    </div>
+    <span className={`text-sm font-medium ${highlight ? 'text-primary-600 text-lg font-bold' : 'text-neutral-900'}`}>
+      {value}
+    </span>
+  </div>
+);
+
+const StatTile = ({ icon: Icon, iconClass, label, value }) => (
+  <div className="text-center p-4 bg-neutral-50 rounded-xl">
+    <Icon className={`w-8 h-8 ${iconClass} mx-auto mb-2`} />
+    <p className="text-sm text-neutral-600">{label}</p>
+    <p className="text-xl font-bold text-neutral-900">{value}</p>
+  </div>
+);
+
+export default StakePool;

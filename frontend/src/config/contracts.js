@@ -1,22 +1,27 @@
-import hardhatLoan from '../abis/hardhat/MultitokenLoan.json';
-import arcLoan from '../abis/arcTestnet/MultitokenLoan.json';
-import sepoliaLoan from '../abis/sepolia/MultitokenLoan.json';
+import hardhatLoan from '../abis/hardhat/LoanMarket.json';
+import arcLoan     from '../abis/arcTestnet/LoanMarket.json';
+import hardhatPool from '../abis/hardhat/LendingPool.json';
+import arcPool     from '../abis/arcTestnet/LendingPool.json';
 import hardhatUsdc from '../abis/hardhat/MockUSDC.json';
 
 const NETWORK = import.meta.env.VITE_NETWORK || 'hardhat';
 
 const LOAN_BY_NETWORK = {
-  hardhat: hardhatLoan,
-  localhost: hardhatLoan,
+  hardhat:    hardhatLoan,
+  localhost:  hardhatLoan,
   arcTestnet: arcLoan,
-  sepolia: sepoliaLoan,
+};
+
+const POOL_BY_NETWORK = {
+  hardhat:    hardhatPool,
+  localhost:  hardhatPool,
+  arcTestnet: arcPool,
 };
 
 const USDC_BY_NETWORK = {
-  hardhat: { address: hardhatLoan.usdc || hardhatUsdc.address, abi: hardhatUsdc.abi },
-  localhost: { address: hardhatLoan.usdc || hardhatUsdc.address, abi: hardhatUsdc.abi },
+  hardhat:    { address: hardhatLoan.usdc || hardhatUsdc.address, abi: hardhatUsdc.abi },
+  localhost:  { address: hardhatLoan.usdc || hardhatUsdc.address, abi: hardhatUsdc.abi },
   arcTestnet: { address: arcLoan.usdc, abi: null },
-  sepolia: { address: sepoliaLoan.usdc, abi: null },
 };
 
 export const ERC20_ABI = [
@@ -26,40 +31,36 @@ export const ERC20_ABI = [
   'function decimals() view returns (uint8)',
 ];
 
-export function getNetwork() {
-  return NETWORK;
-}
+export function getNetwork()  { return NETWORK; }
 
-/** Public RPC for read-only contract calls (no wallet required). */
 export function getRpcUrl() {
   switch (NETWORK) {
-    case 'arcTestnet':
-      return import.meta.env.VITE_ARC_RPC_URL || 'https://rpc.testnet.arc.network';
+    case 'arcTestnet': return import.meta.env.VITE_ARC_RPC_URL || 'https://rpc.testnet.arc.network';
     case 'hardhat':
-    case 'localhost':
-      return import.meta.env.VITE_LOCAL_RPC_URL || 'http://127.0.0.1:8545';
-    case 'sepolia':
-      return import.meta.env.VITE_SEPOLIA_RPC_URL || '';
-    default:
-      return '';
+    case 'localhost':  return import.meta.env.VITE_LOCAL_RPC_URL || 'http://127.0.0.1:8545';
+    default:           return '';
   }
 }
 
 export function getLoanDeployment() {
-  const deployment = LOAN_BY_NETWORK[NETWORK];
-  if (!deployment?.address || deployment.abi?.length === 0) {
-    throw new Error(
-      `No MultitokenLoan deployment for VITE_NETWORK=${NETWORK}. Run: cd backend && npx hardhat run scripts/deploy.js --network <network>`
-    );
+  const d = LOAN_BY_NETWORK[NETWORK];
+  if (!d?.address || !d.abi?.length) {
+    throw new Error(`No LoanMarket deployment for VITE_NETWORK=${NETWORK}. Run: cd backend && npx hardhat run scripts/deploy.js --network <network>`);
   }
-  return deployment;
+  return d;
+}
+
+export function getPoolDeployment() {
+  const d = POOL_BY_NETWORK[NETWORK];
+  if (!d?.address || !d.abi?.length) {
+    throw new Error(`No LendingPool deployment for VITE_NETWORK=${NETWORK}.`);
+  }
+  return d;
 }
 
 export function getUsdcConfig() {
   const cfg = USDC_BY_NETWORK[NETWORK];
-  if (!cfg?.address) {
-    throw new Error(`No USDC address for VITE_NETWORK=${NETWORK}`);
-  }
+  if (!cfg?.address) throw new Error(`No USDC address for VITE_NETWORK=${NETWORK}`);
   return { address: cfg.address, abi: cfg.abi || ERC20_ABI };
 }
 

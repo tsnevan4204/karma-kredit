@@ -9,29 +9,29 @@ const Header = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const getNavigation = () => {
+    // Everyone sees Marketplace + Stake + Orderbook so borrowers can verify
+    // their loan appears on each surface, and investors can compare modes.
     const baseNav = [
-      { name: 'Home', href: '/' },
+      { name: 'Home',        href: '/' },
       { name: 'Marketplace', href: '/marketplace' },
-      { name: 'Stake', href: '/stake' },
+      { name: 'Stake',       href: '/stake' },
+      { name: 'Orderbook',   href: '/orderbook' },
     ];
 
-    if (userRole === 'business') {
-      return [
-        ...baseNav,
+    if (userRole === 'borrower' || userRole === 'business') {
+      return [...baseNav,
         { name: 'Borrower Dashboard', href: '/borrower' },
-        { name: 'Wallet', href: '/wallet' },
+        { name: 'Wallet',             href: '/wallet' },
       ];
     } else if (userRole === 'investor') {
-      return [
-        ...baseNav,
+      return [...baseNav,
         { name: 'Investor Dashboard', href: '/investor' },
-        { name: 'Wallet', href: '/wallet' },
+        { name: 'Wallet',             href: '/wallet' },
       ];
     } else {
-      return [
-        ...baseNav,
+      return [...baseNav,
         { name: 'Dashboard', href: '/borrower' },
-        { name: 'Wallet', href: '/wallet' },
+        { name: 'Wallet',    href: '/wallet' },
       ];
     }
   };

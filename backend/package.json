@@ -6,6 +6,7 @@
   "scripts": {
     "compile": "hardhat compile",
     "test": "hardhat test",
+    "test:market": "hardhat test test/LoanMarket.test.js",
     "deploy:local": "hardhat run scripts/deploy-local.js --network hardhat",
     "deploy:arc": "hardhat run scripts/deploy.js --network arcTestnet",
     "seed:local": "hardhat run scripts/seed-loans.js --network hardhat",

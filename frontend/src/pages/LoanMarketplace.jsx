@@ -1,7 +1,12 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
+import { KarmaBadge, FirstTimePill, IdentityVerifiedPill } from '../components/KarmaBadge';
+import FundingSourcesPanel from '../components/FundingSourcesPanel';
+import { addressUrl } from '../lib/explorer';
 import { useWallet } from '../contexts/WalletContext';
 import { USE_DEMO_LOANS } from '../config/contracts';
 import { Search, Filter, TrendingUp, Clock, DollarSign, RefreshCw, X, Plus } from 'lucide-react';
+import FundFromBase from '../integrations/circle/cctp/FundFromBase';
 
 const LoanMarketplace = () => {
   const { account, getFicoScore, getAllLoans, investInLoan, userRole } = useWallet();
@@ -142,40 +147,31 @@ const LoanMarketplace = () => {
       
       // Transform contract data to match marketplace UI expectations
       const formattedContractLoans = await Promise.all(contractLoans.map(async loan => {
-        // Get actual FICO score for the borrower
-        let ficoScore = 650; // Default
+        // C9: pull on-chain karma (0-100) instead of legacy wallet-graph FICO
+        let karmaScore = 70;          // default starting karma
+        let firstTime  = true;
+        let hasBinding = false;
         try {
-          console.log(`🔍 Fetching FICO score for borrower: ${loan.borrower}`);
           const apiBase = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-          const response = await fetch(`${apiBase}/api/fico-score`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ 
-              wallet_address: loan.borrower,
-              chain: import.meta.env.VITE_NETWORK === 'arcTestnet' ? 'arc-testnet' : 'sepolia'
-            })
-          });
-          
-          if (!response.ok) {
-            console.error(`❌ FICO API response not ok: ${response.status}`);
-            const errorText = await response.text();
-            console.error('Error response:', errorText);
-          } else {
+          const response = await fetch(`${apiBase}/api/karma/${loan.borrower}`);
+          if (response.ok) {
             const data = await response.json();
-            console.log(`📊 FICO API response for ${loan.borrower}:`, data);
-            ficoScore = data.fico_score || 650;
-            console.log(`✅ Using FICO score: ${ficoScore}`);
+            karmaScore = data.karma ?? 70;
+            firstTime  = !!data.first_time_user;
+            hasBinding = !!data.has_identity_binding;
           }
         } catch (error) {
-          console.error('❌ Error fetching FICO for', loan.borrower, ':', error);
+          console.error('Karma fetch failed for', loan.borrower, ':', error);
         }
 
         return {
           id: loan.id,
           borrower: {
-            name: `${loan.borrower.slice(0, 6)}...${loan.borrower.slice(-4)}`,
-            karma: Math.round(ficoScore),
-            address: loan.borrower
+            name:          `${loan.borrower.slice(0, 6)}...${loan.borrower.slice(-4)}`,
+            karma:         karmaScore,
+            firstTimeUser: firstTime,
+            hasBinding,
+            address:       loan.borrower
           },
           amount: parseFloat(loan.amount),
           interest: parseFloat(loan.interest),
@@ -420,17 +416,34 @@ const LoanMarketplace = () => {
 
               {/* Borrower Info */}
               <div className="flex items-center justify-between mb-4">
-                <div>
-                  <h3 className="font-semibold text-neutral-900">{loan.borrower.name}</h3>
-                  <p className="text-sm text-neutral-600 capitalize">{loan.category}</p>
-                </div>
-                <div className="text-right">
-                  <div className={`karma-gauge`}>
-                    {loan.borrower.karma}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <Link
+                      to={`/profile/${loan.borrower.address}`}
+                      className="font-semibold text-neutral-900 hover:text-primary-600"
+                      title="View full profile + payment history"
+                    >
+                      {loan.borrower.name}
+                    </Link>
+                    <a
+                      href={addressUrl(loan.borrower.address)}
+                      target="_blank" rel="noopener noreferrer"
+                      className="text-xs text-neutral-400 hover:text-primary-600"
+                      title="View on ArcScan"
+                    >↗</a>
                   </div>
-                  <span className={`text-xs font-medium ${getKarmaColor(loan.borrower.karma)}`}>
-                    Karma
-                  </span>
+                  <p className="text-sm text-neutral-600 capitalize">{loan.category}</p>
+                  <div className="flex flex-wrap gap-1 mt-2">
+                    <KarmaBadge karma={loan.borrower.karma} />
+                    {loan.borrower.firstTimeUser && <FirstTimePill />}
+                    {loan.borrower.hasBinding && <IdentityVerifiedPill />}
+                  </div>
+                  {/* Funding sources — compact pills */}
+                  {typeof loan.id === 'number' && (
+                    <div className="mt-2">
+                      <FundingSourcesPanel loanId={loan.id} compact allowAutoFund={false} />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -482,15 +495,18 @@ const LoanMarketplace = () => {
                 </div>
               </div>
 
-              {/* Investment Button */}
+              {/* Investment Buttons */}
               {loan.funded < 100 && userRole === 'investor' && (
-                <button
-                  onClick={() => handleInvestClick(loan)}
-                  className="w-full btn-primary"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Invest Now
-                </button>
+                <>
+                  <button
+                    onClick={() => handleInvestClick(loan)}
+                    className="w-full btn-primary"
+                  >
+                    <Plus className="w-4 h-4 mr-2" />
+                    Fund on Arc (USDC)
+                  </button>
+                  <FundFromBase loan={loan} />
+                </>
               )}
 
               {loan.funded >= 100 && (
